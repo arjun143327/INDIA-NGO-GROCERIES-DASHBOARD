@@ -14,6 +14,9 @@ import UsageEntryForm from '../../components/forms/UsageEntryForm'
 
 export default function SchoolDashboard() {
   const [activeModal, setActiveModal] = useState(null)
+  const [activeTab, setActiveTab] = useState('Overview')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [statusFilter, setstatusFilter] = useState('All')
   
   // Data hooks
   const { stock, loading: stockLoading, refetch: refetchStock } = useCurrentStock()
@@ -32,7 +35,16 @@ export default function SchoolDashboard() {
     setActiveModal(null)
     handleUpdate()
   }
-
+//Filter logic for the inventory tab
+  const filteredStock = stock.filter(item => {
+    const matchesSearch = item.item_name.toLowerCase().includes(searchQuery.toLowerCase())
+    const status = stockStatus(item.current_stock, item.threshold_qty)
+    const matchesStatus = statusFilter === 'All' || status === statusFilter.toLowerCase()
+    return matchesSearch && matchesStatus
+  })
+  
+  
+  
   return (
     <div className="space-y-4">
       {/* Header and Actions */}
@@ -50,6 +62,25 @@ export default function SchoolDashboard() {
           >
             Record Incoming Stock
           </button>
+          {/* Tab navigation */}
+          <div className = "flex border-b border-app-border">
+            {['Overview', 'Inventory', 'Activity', 'Reports'].map((tab) =>(
+              <button
+                key = {tab}
+                onClick = {() => setActiveTab(tab)}
+                className = {`px-5 py-3 text-[13px] font-medium transition-colors
+          ${
+            activeTab === tab
+              ? 'border-b-2 border-app-greenMid text-app-greenMid'
+              : 'text-app-textSecondary hover:text-app-textPrimary'
+              
+          }`}
+          >
+          {tab}
+          </button>
+            ))}
+          </div>
+
           <button
             onClick={() => setActiveModal('usage')}
             className="h-[32px] rounded-lg border border-app-border bg-white px-4 text-[12px] font-semibold text-app-textPrimary shadow-sm hover:bg-app-surfaceAlt transition-colors"
@@ -58,6 +89,9 @@ export default function SchoolDashboard() {
           </button>
         </div>
       </div>
+      {/*Tab content */}
+      {activeTab === 'Overview' && (
+         <div className="space-y-4">
 
       {/* Stat Cards */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
@@ -85,8 +119,31 @@ export default function SchoolDashboard() {
         </div>
       )}
 
-      {/* Current Stock Table */}
-      <div className="overflow-hidden rounded-[10px] border border-app-border bg-app-surface">
+      {/* INVENTORY TAB */}
+      {activeTab === 'Inventory' && (
+        <div className="space-y-4">
+          {/* Search and Filter Bar */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <input
+              type="text"
+              placeholder="Search items..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="h-[36px] flex-1 rounded-lg border border-app-border bg-white px-3 text-[13px] text-app-textPrimary focus:border-app-greenMid focus:outline-none"
+            />
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="h-[36px] rounded-lg border border-app-border bg-white px-3 text-[13px] text-app-textPrimary focus:border-app-greenMid focus:outline-none"
+            >
+              <option value="All">All Statuses</option>
+              <option value="OK">OK</option>
+              <option value="Low">Low</option>
+              <option value="Critical">Critical</option>
+            </select>
+          </div>
+
+         <div className="overflow-hidden rounded-[10px] border border-app-border bg-app-surface">
         <div className="border-b border-app-border px-4 py-[14px]">
           <h2 className="text-[13px] font-semibold text-app-textPrimary">Current Inventory</h2>
         </div>
@@ -106,12 +163,12 @@ export default function SchoolDashboard() {
                 <tr>
                   <td colSpan="5" className="px-4 py-4 text-center text-app-textSecondary">Loading stock...</td>
                 </tr>
-              ) : stock.length === 0 ? (
+              ) : filteredStock.length === 0 ? (
                 <tr>
                   <td colSpan="5" className="px-4 py-4 text-center text-app-textSecondary">No inventory items tracked.</td>
                 </tr>
               ) : (
-                stock.map((item) => {
+                filteredStock.map((item) => {
                   const status = stockStatus(item.current_stock, item.threshold_qty)
                   return (
                     <tr key={item.item_id} className="border-b border-app-border last:border-0 hover:bg-[#fafaf9]">
@@ -132,6 +189,11 @@ export default function SchoolDashboard() {
           </table>
         </div>
       </div>
+          
+        </div>
+      )}
+
+      
 
       {/* Recent Entries */}
       <div className="overflow-hidden rounded-[10px] border border-app-border bg-app-surface">
@@ -150,6 +212,8 @@ export default function SchoolDashboard() {
           )}
         </div>
       </div>
+      </div>
+      )}
 
       {/* Modals */}
       <StockEntryForm 
