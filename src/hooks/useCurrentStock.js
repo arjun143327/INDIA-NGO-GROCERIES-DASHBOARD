@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
+import { isMockMode, mockDb } from '../utils/mockDb'
 
 export function useCurrentStock() {
   const { profile } = useAuth()
@@ -16,6 +17,15 @@ export function useCurrentStock() {
     }
 
     setLoading(true)
+
+    if (isMockMode()) {
+      setTimeout(() => {
+        const data = mockDb.getCurrentStock()
+        setStock(data)
+        setLoading(false)
+      }, 300); //300ms to simulate network latency
+      return
+    }
 
     let query = supabase.from('current_stock_view').select('*').order('item_name')
 

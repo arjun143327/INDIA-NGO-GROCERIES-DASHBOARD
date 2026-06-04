@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
+import { isMockMode, mockDb } from '../utils/mockDb'
 
 function mapStockEntry(entry) {
   return {
@@ -38,6 +39,15 @@ export function useActivityFeed(limit = 10) {
     }
 
     setLoading(true)
+
+    if (isMockMode()) {
+      setTimeout(() => {
+        const data = mockDb.getActivityFeed(limit)
+        setEntries(data)
+        setLoading(false)
+      }, 300)
+      return
+    }
 
     const stockQuery = supabase
       .from('stock_entries')

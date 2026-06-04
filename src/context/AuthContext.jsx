@@ -61,7 +61,7 @@ export function AuthProvider({ children }) {
 
   // MOCK LOGIN FOR DEVELOPMENT
   async function mockLogin(email) {
-    const role = email.includes('ngo') ? 'ngo_admin' : 'school_staff'
+    const role = email.includes('admin') ? 'ngo_admin' : 'school_staff'
     setSession({ user: { id: 'mock-user' } })
     setProfile({
       id: 'mock-user',
