@@ -86,6 +86,12 @@ export function useActivityFeed(limit = 10) {
 
   useEffect(() => {
     refetch()
+    
+    if (isMockMode()) {
+      const handleMockUpdate = () => refetch()
+      window.addEventListener('mock-db-update', handleMockUpdate)
+      return () => window.removeEventListener('mock-db-update', handleMockUpdate)
+    }
   }, [refetch])
 
   return { entries, loading, error, refetch }

@@ -47,6 +47,12 @@ export function useInventoryItems() {
 
   useEffect(() => {
     refetch()
+    
+    if (isMockMode()) {
+      const handleMockUpdate = () => refetch()
+      window.addEventListener('mock-db-update', handleMockUpdate)
+      return () => window.removeEventListener('mock-db-update', handleMockUpdate)
+    }
   }, [refetch])
 
   return { items, loading, error, refetch }

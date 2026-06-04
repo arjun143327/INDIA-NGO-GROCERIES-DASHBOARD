@@ -29,11 +29,19 @@ export const STATUS_STYLES = {
 }
 
 export function stockStatus(stock, threshold) {
-  if (threshold <= 0) {
+  const s = Number(stock)
+  const t = Number(threshold)
+
+  if (isNaN(s) || isNaN(t) || t <= 0) {
     return 'ok'
   }
 
-  const ratio = Number(stock) / Number(threshold)
+  // If stock is 0 and threshold > 0, it's immediately critical
+  if (s <= 0 && t > 0) {
+    return 'critical'
+  }
+
+  const ratio = s / t
 
   if (ratio <= CRITICAL_RATIO) {
     return 'critical'
