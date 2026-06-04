@@ -59,8 +59,20 @@ export function AuthProvider({ children }) {
     setLoading(false)
   }
 
+  // MOCK LOGIN FOR DEVELOPMENT
+  async function mockLogin(email) {
+    const role = email.includes('ngo') ? 'ngo_admin' : 'school_staff'
+    setSession({ user: { id: 'mock-user' } })
+    setProfile({
+      id: 'mock-user',
+      name: role === 'ngo_admin' ? 'Admin User' : 'School User',
+      role: role,
+      school_id: role === 'school_staff' ? 'mock-school-1' : null,
+    })
+  }
+
   return (
-    <AuthContext.Provider value={{ session, profile, loading, fetchProfile }}>
+    <AuthContext.Provider value={{ session, profile, loading, fetchProfile, mockLogin }}>
       {children}
     </AuthContext.Provider>
   )

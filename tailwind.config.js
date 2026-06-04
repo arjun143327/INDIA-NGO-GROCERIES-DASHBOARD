@@ -5,18 +5,18 @@ export default {
     extend: {
       colors: {
         app: {
-          greenDark: '#145c32',
-          greenMid: '#1a6b3c',
-          greenPale: '#e8f4ee',
+          greenDark: '#0e4122',   // Deeper green
+          greenMid: '#166236',
+          greenPale: '#e3f0e8',
           amber: '#d97706',
           amberBg: '#fef3c7',
           red: '#dc2626',
           redBg: '#fee2e2',
-          textPrimary: '#111111',
-          textSecondary: '#555555',
+          textPrimary: '#1a1c1a', // Softer black/green tint
+          textSecondary: '#6b7264', // Muted olive/gray
           surface: '#ffffff',
-          surfaceAlt: '#f7f7f6',
-          border: 'rgba(0,0,0,0.09)',
+          surfaceAlt: '#f8f7f2',  // Warm off-white / cream
+          border: 'rgba(20, 40, 20, 0.08)', // Warmer, slightly green border
         },
       },
       fontFamily: {
