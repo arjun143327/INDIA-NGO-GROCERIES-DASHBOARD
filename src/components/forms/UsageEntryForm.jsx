@@ -130,19 +130,21 @@ export default function UsageEntryForm({ open, onClose, onSuccess }) {
               Items Consumed
             </label>
             
+            <div className="space-y-2">
             {items.map((item, index) => {
               const selectedStockItem = stock.find(s => s.item_id === item.item_id)
               const warning = selectedStockItem && Number(item.quantity) > selectedStockItem.current_stock
+              const hasError = warning || (item.quantity && Number(item.quantity) <= 0)
               
               return (
-                <div key={item.id} className="relative rounded-lg border border-app-border p-3 bg-app-surfaceAlt/50">
+                <div key={item.id} className={`relative rounded-[8px] border p-3 transition-colors ${hasError ? 'border-app-amber/60 bg-[#fffaf5]' : 'border-app-border bg-gray-50/50'}`}>
                   <div className="flex gap-2 items-start">
                     <div className="flex-1">
                       <select
                         required
                         value={item.item_id}
                         onChange={(e) => updateItem(item.id, 'item_id', e.target.value)}
-                        className="h-[34px] w-full rounded-lg border border-app-border bg-white px-3 text-[12px] text-app-textPrimary focus:border-app-greenMid focus:outline-none focus:ring-1 focus:ring-app-greenMid"
+                        className={`h-[34px] w-full rounded-[6px] border ${hasError ? 'border-app-amber/40' : 'border-app-border'} bg-white px-3 text-[12px] text-app-textPrimary focus:border-app-greenMid focus:outline-none`}
                       >
                         <option value="" disabled>Select item</option>
                         {stock.map(s => (
@@ -157,7 +159,7 @@ export default function UsageEntryForm({ open, onClose, onSuccess }) {
                       </select>
                     </div>
                     
-                    <div className="w-[100px]">
+                    <div className="w-[110px]">
                       <div className="relative">
                         <input
                           type="number"
@@ -167,10 +169,10 @@ export default function UsageEntryForm({ open, onClose, onSuccess }) {
                           value={item.quantity}
                           onChange={(e) => updateItem(item.id, 'quantity', e.target.value)}
                           placeholder="Qty"
-                          className="h-[34px] w-full rounded-lg border border-app-border bg-white pl-3 pr-8 text-[12px] text-app-textPrimary focus:border-app-greenMid focus:outline-none focus:ring-1 focus:ring-app-greenMid"
+                          className={`h-[34px] w-full rounded-[6px] border ${hasError ? 'border-app-amber/40 bg-[#fffcf9]' : 'border-app-border bg-white'} pl-3 pr-9 text-[12px] text-app-textPrimary focus:border-app-greenMid focus:outline-none`}
                         />
                         {selectedStockItem && (
-                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-app-textSecondary">
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-medium text-app-textSecondary">
                             {selectedStockItem.unit}
                           </span>
                         )}
@@ -190,13 +192,14 @@ export default function UsageEntryForm({ open, onClose, onSuccess }) {
                   </div>
                   
                   {warning && (
-                    <p className="mt-1.5 text-[11px] text-app-amber">
-                      Warning: Exceeds current stock (Available: {selectedStockItem.current_stock} {selectedStockItem.unit})
+                    <p className="mt-2 text-[11px] font-medium text-app-amber flex items-center gap-1">
+                      <span>⚠</span> Exceeds stock (Available: {selectedStockItem.current_stock} {selectedStockItem.unit})
                     </p>
                   )}
                 </div>
               )
             })}
+            </div>
 
             <button
               type="button"

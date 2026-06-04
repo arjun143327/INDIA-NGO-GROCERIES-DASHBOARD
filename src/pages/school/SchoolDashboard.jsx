@@ -17,6 +17,8 @@ export default function SchoolDashboard() {
   const [activeTab, setActiveTab] = useState('Overview')
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setstatusFilter] = useState('All')
+  const [activityTypeFilter, setActivityTypeFilter] = useState('All')
+  const [reportRange, setReportRange] = useState('7days')
   
   // Data hooks
   const { stock, loading: stockLoading, refetch: refetchStock } = useCurrentStock()
@@ -43,7 +45,12 @@ export default function SchoolDashboard() {
     return matchesSearch && matchesStatus
   })
   
-  
+  //filter logic for activity tab
+  const filteredEntries = entries.filter((entry) => {
+    if (activityTypeFilter === 'All') return true
+    return entry.type === activityTypeFilter.toLowerCase()
+  })
+   
   
   return (
     <div className="space-y-4">
@@ -62,7 +69,15 @@ export default function SchoolDashboard() {
           >
             Record Incoming Stock
           </button>
-          {/* Tab navigation */}
+          <button
+            onClick={() => setActiveModal('usage')}
+            className="h-[32px] rounded-lg border border-app-border bg-white px-4 text-[12px] font-semibold text-app-textPrimary shadow-sm hover:bg-app-surfaceAlt transition-colors"
+          >
+            Log Daily Usage
+          </button>
+        </div>
+      </div>
+      {/* Tab navigation */}
           <div className = "flex border-b border-app-border">
             {['Overview', 'Inventory', 'Activity', 'Reports'].map((tab) =>(
               <button
@@ -81,14 +96,6 @@ export default function SchoolDashboard() {
             ))}
           </div>
 
-          <button
-            onClick={() => setActiveModal('usage')}
-            className="h-[32px] rounded-lg border border-app-border bg-white px-4 text-[12px] font-semibold text-app-textPrimary shadow-sm hover:bg-app-surfaceAlt transition-colors"
-          >
-            Log Daily Usage
-          </button>
-        </div>
-      </div>
       {/*Tab content */}
       {activeTab === 'Overview' && (
          <div className="space-y-4">
@@ -102,9 +109,9 @@ export default function SchoolDashboard() {
 
       {/* Alerts */}
       {hasAlerts && (
-        <div className="overflow-hidden rounded-[10px] border border-app-border bg-app-surface">
-          <div className="border-b border-app-border px-4 py-[14px]">
-            <h2 className="flex items-center gap-2 text-[13px] font-semibold text-app-textPrimary">
+        <div className="overflow-hidden rounded-[10px] border border-app-border bg-app-surface shadow-sm shadow-black/5">
+          <div className="border-b border-app-border px-5 py-4 bg-[#fffaf5]">
+            <h2 className="flex items-center gap-2 text-[14px] font-semibold text-app-textPrimary">
               <span className="text-app-amber">⚠</span> Needs Attention
             </h2>
           </div>
@@ -115,6 +122,59 @@ export default function SchoolDashboard() {
             {low.map((item) => (
               <AlertStrip key={item.item_id} item={item} />
             ))}
+          </div>
+        </div>
+      )}
+        {/* double column preview grid */}
+        <div className = "grid gap-4 md:grid-cols-2">
+          {/* left column: inventory preview */}
+          <div className="flex flex-col overflow-hidden rounded-[10px]
+          border border-app-border bg-app-surface">
+            <div className="border-b border-app-border px-4 py-[14px]">
+              <h2 className = "text-[13px] font-semibold text-app-textPrimary">Inventory preview</h2>
+              </div>
+              <div className="flex-1 overflow-x-auto">
+                <table className="w-full text-left text-[12px]">
+                  <tbody>
+                    {stockLoading ? (
+                      <tr><td className="p-4 text-center text-app-textSecondary">Loading...</td></tr>
+                    ) : stock.slice(0, 4).map((item) => (
+                      <tr key={item.item_id} className="border-b border-app-border last:border-0">
+                        <td className="px-4 py-3 font-medium text-app-textPrimary">{item.item_name}</td>
+                        <td className="px-4 py-3 text-right text-app-textSecondary">{item.current_stock} {item.unit}</td>
+
+
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <button 
+                onClick={() => setActiveTab('Inventory')}
+                className="border-t border-app-border bg-app-surfaceAlt py-2.5 text-center text-[11px] font-medium text-app-greenMid hover:bg-[#ecebe4] transition-colors"
+              >
+                View full inventory →
+              </button>
+            </div>
+            {/* Right Column: Activity Preview */}
+            <div className="flex flex-col overflow-hidden rounded-[10px] border border-app-border bg-app-surface">
+              <div className="border-b border-app-border px-4 py-[14px]">
+                <h2 className="text-[13px] font-semibold text-app-textPrimary">Recent Activity</h2>
+              </div>
+              <div className="flex flex-col flex-1">
+                {feedLoading ? (
+                  <div className="p-4 text-center text-[12px] text-app-textSecondary">Loading...</div>
+                ) : entries.slice(0, 4).map((entry) => (
+                  <ActivityRow key={`${entry.type}-${entry.id}`} entry={entry} />
+                ))}
+              </div>
+              <button 
+                onClick={() => setActiveTab('Activity')}
+                className="border-t border-app-border bg-app-surfaceAlt py-2.5 text-center text-[11px] font-medium text-app-greenMid hover:bg-[#ecebe4] transition-colors"
+              >
+                View full activity log →
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -143,19 +203,19 @@ export default function SchoolDashboard() {
             </select>
           </div>
 
-         <div className="overflow-hidden rounded-[10px] border border-app-border bg-app-surface">
-        <div className="border-b border-app-border px-4 py-[14px]">
-          <h2 className="text-[13px] font-semibold text-app-textPrimary">Current Inventory</h2>
+         <div className="overflow-hidden rounded-[10px] border border-app-border bg-app-surface shadow-sm shadow-black/5">
+        <div className="border-b border-app-border px-5 py-4">
+          <h2 className="text-[14px] font-semibold text-app-textPrimary">Current Inventory</h2>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-[12px]">
+          <table className="w-full text-left text-[13px]">
             <thead>
-              <tr className="border-b border-app-border bg-app-surfaceAlt text-[10px] uppercase tracking-[0.4px] text-app-textSecondary">
-                <th className="px-4 py-2.5 font-semibold">Item</th>
-                <th className="px-4 py-2.5 font-semibold">In Stock</th>
-                <th className="px-4 py-2.5 font-semibold">Threshold</th>
-                <th className="px-4 py-2.5 font-semibold w-[100px]">Level</th>
-                <th className="px-4 py-2.5 font-semibold w-[80px]">Status</th>
+              <tr className="border-b border-app-border bg-app-surfaceAlt text-[11px] uppercase tracking-[0.5px] text-app-textSecondary">
+                <th className="px-5 py-3 font-semibold text-left">Item</th>
+                <th className="px-5 py-3 font-semibold text-right">In Stock</th>
+                <th className="px-5 py-3 font-semibold text-right">Threshold</th>
+                <th className="px-5 py-3 font-semibold text-left w-[120px]">Level</th>
+                <th className="px-5 py-3 font-semibold text-left w-[100px]">Status</th>
               </tr>
             </thead>
             <tbody>
@@ -170,15 +230,20 @@ export default function SchoolDashboard() {
               ) : (
                 filteredStock.map((item) => {
                   const status = stockStatus(item.current_stock, item.threshold_qty)
+                  const rowBg = status === 'critical' ? 'bg-app-redBg/30' : status === 'low' ? 'bg-app-amberBg/30' : 'hover:bg-[#fafaf9] bg-white'
                   return (
-                    <tr key={item.item_id} className="border-b border-app-border last:border-0 hover:bg-[#fafaf9]">
-                      <td className="px-4 py-2.5 font-medium text-app-textPrimary">{item.item_name}</td>
-                      <td className="px-4 py-2.5 text-app-textPrimary">{item.current_stock} {item.unit}</td>
-                      <td className="px-4 py-2.5 text-app-textSecondary">{item.threshold_qty} {item.unit}</td>
-                      <td className="px-4 py-2.5">
+                    <tr key={item.item_id} className={`border-b border-app-border last:border-0 transition-colors ${rowBg}`}>
+                      <td className="px-5 py-3.5 font-medium text-app-textPrimary">{item.item_name}</td>
+                      <td className="px-5 py-3.5 text-right font-medium text-app-textPrimary">
+                        {item.current_stock} <span className="text-app-textSecondary font-normal">{item.unit}</span>
+                      </td>
+                      <td className="px-5 py-3.5 text-right text-app-textSecondary">
+                        {item.threshold_qty} <span className="font-normal">{item.unit}</span>
+                      </td>
+                      <td className="px-5 py-3.5">
                         <ProgressBar stock={item.current_stock} threshold={item.threshold_qty} />
                       </td>
-                      <td className="px-4 py-2.5">
+                      <td className="px-5 py-3.5">
                         <StatusPill status={status} />
                       </td>
                     </tr>
@@ -194,8 +259,23 @@ export default function SchoolDashboard() {
       )}
 
       
-
-      {/* Recent Entries */}
+      {/* ACTIVITY TAB */}
+      {activeTab === 'Activity' && (
+        <div className="space-y-4">
+          
+          {/* Activity Filter Bar */}
+          <div className="flex">
+            <select
+              value={activityTypeFilter}
+              onChange={(e) => setActivityTypeFilter(e.target.value)}
+              className="h-[36px] w-[200px] rounded-lg border border-app-border bg-white px-3 text-[13px] text-app-textPrimary focus:border-app-greenMid focus:outline-none"
+            >
+              <option value="All">All Activity</option>
+              <option value="Stock">Incoming Stock</option>
+              <option value="Usage">Daily Usage</option>
+            </select>
+          </div>
+        {/* Recent Entries */}
       <div className="overflow-hidden rounded-[10px] border border-app-border bg-app-surface">
         <div className="border-b border-app-border px-4 py-[14px]">
           <h2 className="text-[13px] font-semibold text-app-textPrimary">Recent Activity</h2>
@@ -203,10 +283,10 @@ export default function SchoolDashboard() {
         <div className="flex flex-col">
           {feedLoading ? (
             <div className="px-4 py-4 text-center text-[12px] text-app-textSecondary">Loading activity...</div>
-          ) : entries.length === 0 ? (
+          ) : filteredEntries.length === 0 ? (
             <div className="px-4 py-4 text-center text-[12px] text-app-textSecondary">No recent entries.</div>
           ) : (
-            entries.map((entry) => (
+            filteredEntries.map((entry) => (
               <ActivityRow key={`${entry.type}-${entry.id}`} entry={entry} />
             ))
           )}
@@ -214,6 +294,83 @@ export default function SchoolDashboard() {
       </div>
       </div>
       )}
+   
+      {/* REPORTS TAB */}
+      {activeTab === 'Reports' && (
+        <div className="space-y-4">
+          
+          {/* Report Filter Bar */}
+          <div className="flex">
+            <select
+              value={reportRange}
+              onChange={(e) => setReportRange(e.target.value)}
+              className="h-[36px] w-[200px] rounded-[8px] border border-app-border bg-white px-3 text-[13px] text-app-textPrimary focus:border-app-greenMid focus:outline-none"
+            >
+              <option value="7days">Last 7 days</option>
+              <option value="30days">Last 30 days</option>
+              <option value="month">This month</option>
+            </select>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            
+            {/* Stock Movement Summary (Visual Mockup) */}
+            <div className="flex flex-col justify-between rounded-[10px] border border-app-border bg-app-surface p-6 shadow-sm shadow-black/5">
+              <div>
+                <h2 className="text-[15px] font-bold text-app-textPrimary">Stock Movement</h2>
+                <p className="mt-1 text-[13px] text-app-textSecondary">Added vs consumed volume</p>
+              </div>
+              
+              <div className="mt-8 space-y-6">
+                <div>
+                  <div className="flex justify-between items-baseline mb-2">
+                    <span className="text-[13px] font-medium text-app-textSecondary uppercase tracking-wide">Total Added</span>
+                    <span className="text-[16px] font-bold text-app-greenMid">350 <span className="text-[12px] font-medium opacity-80">kg/L</span></span>
+                  </div>
+                  <div className="h-2.5 w-full overflow-hidden rounded-full bg-[#f0f0f0]">
+                    <div className="h-full bg-app-greenMid w-[85%] rounded-full"></div>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex justify-between items-baseline mb-2">
+                    <span className="text-[13px] font-medium text-app-textSecondary uppercase tracking-wide">Total Consumed</span>
+                    <span className="text-[16px] font-bold text-app-amber">185 <span className="text-[12px] font-medium opacity-80">kg/L</span></span>
+                  </div>
+                  <div className="h-2.5 w-full overflow-hidden rounded-full bg-[#f0f0f0]">
+                    <div className="h-full bg-app-amber w-[45%] rounded-full"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Inventory Health Stats */}
+            <div className="flex flex-col rounded-[10px] border border-app-border bg-app-surface p-6 shadow-sm shadow-black/5">
+              <div>
+                <h2 className="text-[15px] font-bold text-app-textPrimary">Inventory Health</h2>
+                <p className="mt-1 text-[13px] text-app-textSecondary">Current status of all tracked items</p>
+              </div>
+              
+              <div className="mt-4 flex flex-1 items-center justify-center gap-10">
+                <div className="flex flex-col items-center">
+                  <div className="text-[42px] font-bold tracking-tight text-app-greenMid leading-none">{stock.length - low.length - critical.length}</div>
+                  <div className="text-[11px] font-bold text-app-textSecondary mt-2 uppercase tracking-[0.05em]">Healthy</div>
+                </div>
+                <div className="flex flex-col items-center">
+                  <div className="text-[42px] font-bold tracking-tight text-app-amber leading-none">{low.length}</div>
+                  <div className="text-[11px] font-bold text-app-textSecondary mt-2 uppercase tracking-[0.05em]">Low</div>
+                </div>
+                <div className="flex flex-col items-center">
+                  <div className="text-[42px] font-bold tracking-tight text-app-red leading-none">{critical.length}</div>
+                  <div className="text-[11px] font-bold text-app-textSecondary mt-2 uppercase tracking-[0.05em]">Critical</div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
+
 
       {/* Modals */}
       <StockEntryForm 

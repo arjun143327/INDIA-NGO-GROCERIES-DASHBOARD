@@ -93,7 +93,7 @@ export default function StockEntryForm({ open, onClose, onSuccess }) {
                 required
                 value={itemId}
                 onChange={(e) => setItemId(e.target.value)}
-                className="h-[34px] w-full rounded-lg border border-app-border bg-white px-3 text-[12px] text-app-textPrimary focus:border-app-greenMid focus:outline-none focus:ring-1 focus:ring-app-greenMid"
+                className="h-[36px] w-full rounded-[6px] border border-app-border bg-white px-3 text-[13px] text-app-textPrimary focus:border-app-greenMid focus:outline-none"
               >
                 <option value="" disabled>Select an item</option>
                 {items.map(item => (
@@ -102,9 +102,9 @@ export default function StockEntryForm({ open, onClose, onSuccess }) {
               </select>
             </div>
             
-            <div className="flex gap-3">
+            <div className="flex gap-4">
               <div className="flex-1">
-                <label htmlFor="stockQty" className="mb-1.5 block text-[11px] font-medium text-app-textSecondary">
+                <label htmlFor="stockQty" className="mb-1.5 block text-[11px] font-medium text-app-textSecondary uppercase tracking-wide">
                   Quantity {selectedItem ? `(${selectedItem.unit})` : ''}
                 </label>
                 <input
@@ -116,12 +116,12 @@ export default function StockEntryForm({ open, onClose, onSuccess }) {
                   value={quantity}
                   onChange={(e) => setQuantity(e.target.value)}
                   placeholder="e.g. 50"
-                  className="h-[34px] w-full rounded-lg border border-app-border bg-white px-3 text-[12px] text-app-textPrimary focus:border-app-greenMid focus:outline-none focus:ring-1 focus:ring-app-greenMid"
+                  className="h-[36px] w-full rounded-[6px] border border-app-border bg-white px-3 text-[13px] text-app-textPrimary focus:border-app-greenMid focus:outline-none"
                 />
               </div>
               
               <div className="flex-1">
-                <label htmlFor="stockDate" className="mb-1.5 block text-[11px] font-medium text-app-textSecondary">
+                <label htmlFor="stockDate" className="mb-1.5 block text-[11px] font-medium text-app-textSecondary uppercase tracking-wide">
                   Date
                 </label>
                 <input
@@ -131,7 +131,7 @@ export default function StockEntryForm({ open, onClose, onSuccess }) {
                   max={new Date().toISOString().split('T')[0]}
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="h-[34px] w-full rounded-lg border border-app-border bg-white px-3 text-[12px] text-app-textPrimary focus:border-app-greenMid focus:outline-none focus:ring-1 focus:ring-app-greenMid"
+                  className="h-[36px] w-full rounded-[6px] border border-app-border bg-white px-3 text-[13px] text-app-textPrimary focus:border-app-greenMid focus:outline-none"
                 />
               </div>
             </div>

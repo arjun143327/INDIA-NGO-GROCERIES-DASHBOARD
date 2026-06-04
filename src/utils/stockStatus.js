@@ -35,11 +35,11 @@ export function stockStatus(stock, threshold) {
 
   const ratio = Number(stock) / Number(threshold)
 
-  if (ratio < CRITICAL_RATIO) {
+  if (ratio <= CRITICAL_RATIO) {
     return 'critical'
   }
 
-  if (ratio < 1) {
+  if (ratio <= 1) {
     return 'low'
   }
 
