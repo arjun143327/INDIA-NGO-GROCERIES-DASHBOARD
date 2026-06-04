@@ -17,7 +17,7 @@ export default function SchoolDashboard() {
   const [activeModal, setActiveModal] = useState(null)
   const [activeTab, setActiveTab] = useState('Overview')
   const [searchQuery, setSearchQuery] = useState('')
-  const [statusFilter, setstatusFilter] = useState('All')
+  const [statusFilter, setStatusFilter] = useState('All')
   const [activityTypeFilter, setActivityTypeFilter] = useState('All')
   const [reportRange, setReportRange] = useState('7days')
   
@@ -38,11 +38,18 @@ export default function SchoolDashboard() {
     setActiveModal(null)
     handleUpdate()
   }
-//Filter logic for the inventory tab
+  // Filter logic for the inventory tab
   const filteredStock = stock.filter(item => {
-    const matchesSearch = item.item_name.toLowerCase().includes(searchQuery.toLowerCase())
+    const searchVal = searchQuery ? searchQuery.toLowerCase() : ''
+    const matchesSearch = item.item_name.toLowerCase().includes(searchVal)
+    
     const status = stockStatus(item.current_stock, item.threshold_qty)
-    const matchesStatus = statusFilter === 'All' || status === statusFilter.toLowerCase()
+    let matchesStatus = false
+    if (statusFilter === 'All') matchesStatus = true
+    else if (statusFilter === 'OK' && status === 'ok') matchesStatus = true
+    else if (statusFilter === 'Low' && status === 'low') matchesStatus = true
+    else if (statusFilter === 'Critical' && status === 'critical') matchesStatus = true
+
     return matchesSearch && matchesStatus
   })
   
@@ -233,7 +240,14 @@ export default function SchoolDashboard() {
                 </tr>
               ) : filteredStock.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="px-4 py-4 text-center text-app-textSecondary">No inventory items tracked.</td>
+                  <td colSpan="5" className="px-4 py-8 text-center">
+                    <p className="text-[13px] font-medium text-app-textPrimary">No items found</p>
+                    <p className="mt-1 text-[12px] text-app-textSecondary">
+                      {searchQuery || statusFilter !== 'All' 
+                        ? `No items match the "${statusFilter}" status filter.` 
+                        : 'No inventory items tracked yet.'}
+                    </p>
+                  </td>
                 </tr>
               ) : (
                 filteredStock.map((item) => {
