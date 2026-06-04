@@ -16,7 +16,7 @@ export default function ActivityRow({ entry }) {
         <div className="flex items-baseline gap-2">
           <span className="text-[13px] font-semibold text-app-textPrimary">{entry.item_name}</span>
           <span className="text-[11px] font-medium text-app-textSecondary tracking-wide uppercase">
-            {isStock ? 'Incoming Stock' : 'Daily Usage'}
+            {isStock ? 'Incoming Stock' : (entry.meal_type ? `Daily Usage • ${entry.meal_type}` : 'Daily Usage')}
           </span>
         </div>
         <div className="mt-0.5 text-[12px] text-app-textSecondary">{relativeDate(entry.created_at)}</div>

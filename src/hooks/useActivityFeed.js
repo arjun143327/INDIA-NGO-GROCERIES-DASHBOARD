@@ -22,6 +22,7 @@ function mapUsageEntry(entry) {
     created_at: entry.created_at,
     item_name: entry.inventory_items?.name ?? 'Unknown item',
     unit: entry.inventory_items?.unit ?? '',
+    meal_type: entry.meal_type,
   }
 }
 
@@ -57,7 +58,7 @@ export function useActivityFeed(limit = 10) {
 
     const usageQuery = supabase
       .from('usage_logs')
-      .select('id, created_at, qty_used, inventory_items(name, unit)')
+      .select('id, created_at, qty_used, meal_type, inventory_items(name, unit)')
       .order('created_at', { ascending: false })
       .limit(limit)
 

@@ -68,7 +68,7 @@ export const mockDb = {
   saveStockEntry: (entry) => {
     const entries = mockDb.getStockEntries()
     const newEntry = {
-      id: `se-${Date.now()}`,
+      id: `se-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
       school_id: entry.school_id || 'mock-school-1',
       created_at: new Date().toISOString(),
       ...entry,
@@ -82,7 +82,7 @@ export const mockDb = {
   saveUsageLog: (log) => {
     const logs = mockDb.getUsageLogs()
     const newLog = {
-      id: `ul-${Date.now()}`,
+      id: `ul-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
       school_id: log.school_id || 'mock-school-1',
       created_at: new Date().toISOString(),
       ...log,
@@ -134,6 +134,7 @@ export const mockDb = {
       created_at: e.created_at,
       item_name: items.find(i => i.id === e.item_id)?.name ?? 'Unknown item',
       unit: items.find(i => i.id === e.item_id)?.unit ?? '',
+      meal_type: e.meal_type,
     }))
 
     return [...stock, ...usage]
