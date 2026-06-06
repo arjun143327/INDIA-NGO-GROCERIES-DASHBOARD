@@ -209,12 +209,10 @@ export default function NgoDashboard() {
                 ) : (
                   <>
                     {critical.map(item => (
-                      <AlertStrip key={item.item_id} status="critical" title={item.item_name}
-                      description={`${item.current_stock} ${item.unit} remaining · Threshold: ${item.threshold_qty} ${item.unit}`} />
+                      <AlertStrip key={item.item_id} item={item} />
                     ))}
                     {low.map(item => (
-                      <AlertStrip key={item.item_id} status="low" title={item.item_name}
-                      description={`${item.current_stock} ${item.unit} remaining · Threshold: ${item.threshold_qty} ${item.unit}`} />
+                      <AlertStrip key={item.item_id} item={item} />
                     ))}
                   </>
                 )}
@@ -336,7 +334,7 @@ export default function NgoDashboard() {
                             )}
                           </td>
                           <td className="px-5 py-3.5 pr-8">
-                            <ProgressBar percentage={stockBarPct(item.current_stock, item.threshold_qty)} status={status} />
+                            <ProgressBar stock={item.current_stock} threshold={item.threshold_qty} />
                           </td>
                           <td className="px-5 py-3.5">
                             <StatusPill status={status} />

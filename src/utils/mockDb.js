@@ -32,8 +32,18 @@ function getStorageItem(key, fallback) {
 
 function setStorageItem(key, value) {
   localStorage.setItem(key, JSON.stringify(value))
-  // Dispatch custom event to notify realtime listeners
+  // Dispatch custom event to notify realtime listeners in current tab
   window.dispatchEvent(new Event('mock-db-update'))
+}
+
+// Add cross-tab synchronization listener for mock mode
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', (e) => {
+    // If the storage event was triggered by our mock keys changing in another tab
+    if (e.key && e.key.startsWith('mock_')) {
+      window.dispatchEvent(new Event('mock-db-update'))
+    }
+  })
 }
 
 export function isMockMode() {
