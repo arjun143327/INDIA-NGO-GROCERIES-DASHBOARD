@@ -1,152 +1,236 @@
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import LiveDot from '../../components/ui/LiveDot'
 import StatCard from '../../components/ui/StatCard'
 import AlertStrip from '../../components/ui/AlertStrip'
 import ActivityRow from '../../components/ui/ActivityRow'
-import { useCurrentStock } from '../../hooks/useCurrentStock'
-import { useAlerts } from '../../hooks/useAlerts'
-import { useActivityFeed } from '../../hooks/useActivityFeed'
-import { AlertCircle } from 'lucide-react'
 import ProgressBar from '../../components/ui/ProgressBar'
 import StatusPill from '../../components/ui/StatusPill'
 import { stockStatus, stockBarPct } from '../../utils/stockStatus'
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer} from 'recharts'
+import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 
-const TABS = ['Overview', 'Stock Status', 'Usage Trends', 'Manage Items']
+import { useCurrentStock } from '../../hooks/useCurrentStock'
+import { useAlerts } from '../../hooks/useAlerts'
+import { useActivityFeed } from '../../hooks/useActivityFeed'
+import { AlertCircle, Calendar, Pencil, Check, X } from 'lucide-react'
+import { supabase } from '../../lib/supabase'
+import { isMockMode, mockDb } from '../../utils/mockDb'
+
+const TABS = ['Overview', 'Stock Status', 'Usage Trends']
 
 export default function NgoDashboard() {
-  // useState creates a state variable 'activeTab' and a function to update it 'setActiveTab'.
-  // It starts with the default value 'Overview'.
   const [activeTab, setActiveTab] = useState('Overview')
+  
+  // Dashboard-wide Date Filter
+  const [dateRange, setDateRange] = useState('7days')
+  
+  // Filters for Stock Status Tab
   const [searchQuery, setSearchQuery] = useState('')
-  const [statusFilter, setStatusFilter] = useState('all')
+  const [statusFilter, setStatusFilter] = useState('All')
 
-  //pull data from our custom hooks
+  // Inline Threshold Editing State
+  const [editingItemId, setEditingItemId] = useState(null)
+  const [editingThreshold, setEditingThreshold] = useState('')
+  const [updatingThreshold, setUpdatingThreshold] = useState(false)
+
+  // Pull data from our custom hooks
   const { stock } = useCurrentStock()
-  const { entries } = useActivityFeed()
+  const { entries } = useActivityFeed(100) // Fetch more to allow meaningful date filtering
   const { critical, low, hasAlerts } = useAlerts(stock)
 
-  const today = new Date().toISOString().split('T')[0]
-  const todayEntriesCount = entries.filter(e => e.created_at.startsWith(today)).length
+  // --- DATA AGGREGATION & FILTERING ---
 
-  const filteredStock = stock.filter(item => {
-    const searchVal = searchQuery ? searchQuery.toLowerCase() : ''
-    const matchesSearch = item.item_name.toLowerCase().includes(searchVal)
+  // 1. Filter all entries by the selected date range
+  const filteredEntries = useMemo(() => {
+    return entries.filter(e => {
+      if (dateRange === 'all') return true
+      const logDate = new Date(e.created_at)
+      const todayDate = new Date()
+      const diffTime = Math.abs(todayDate - logDate)
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+      if (dateRange === '7days') return diffDays <= 7
+      if (dateRange === '30days') return diffDays <= 30
+      return true
+    })
+  }, [entries, dateRange])
+
+  // 2. Filter Stock for the Stock Status Tab
+  const filteredStock = useMemo(() => {
+    return stock.filter(item => {
+      const searchVal = searchQuery ? searchQuery.toLowerCase() : ''
+      const matchesSearch = item.item_name.toLowerCase().includes(searchVal)
+      
+      const status = stockStatus(item.current_stock, item.threshold_qty)
+      let matchesStatus = false
+      if (statusFilter === 'All') matchesStatus = true
+      else if (statusFilter === 'OK' && status === 'ok') matchesStatus = true
+      else if (statusFilter === 'Low' && status === 'low') matchesStatus = true
+      else if (statusFilter === 'Critical' && status === 'critical') matchesStatus = true
+      return matchesSearch && matchesStatus
+    })
+  }, [stock, searchQuery, statusFilter])
+
+  // 3. Aggregate Usage Data for Charts
+  const chartData = useMemo(() => {
+    const usageLogs = filteredEntries.filter(e => e.type === 'usage')
+
+    // Daily consumption trend
+    const dailyDataMap = usageLogs.reduce((acc, log) => {
+      const date = log.created_at.split('T')[0]
+      if (!acc[date]) acc[date] = { date, Total: 0 }
+      acc[date].Total += Number(log.qty)
+      return acc
+    }, {})
+    const dailyChart = Object.values(dailyDataMap).sort((a,b) => new Date(a.date) - new Date(b.date))
     
-    const status = stockStatus(item.current_stock, item.threshold_qty)
-    let matchesStatus = false
-    if (statusFilter === 'All') matchesStatus = true
-    else if (statusFilter === 'OK' && status === 'ok') matchesStatus = true
-    else if (statusFilter === 'Low' && status === 'low') matchesStatus = true
-    else if (statusFilter === 'Critical' && status === 'critical') matchesStatus = true
-    return matchesSearch && matchesStatus
-  })
-  
+    // Most used items
+    const itemUsageMap = usageLogs.reduce((acc, log) => {
+      if (!acc[log.item_name]) acc[log.item_name] = { name: log.item_name, Amount: 0 }
+      acc[log.item_name].Amount += Number(log.qty)
+      return acc
+    }, {})
+    const itemChart = Object.values(itemUsageMap).sort((a,b) => b.Amount - a.Amount).slice(0, 5)
 
-  // DATA AGGREGATION FOR CHARTS 
+    return { dailyChart, itemChart }
+  }, [filteredEntries])
 
-  //STEP 1: only look at usage logs (ignore incoming stocks)
-  const usageLogs = entries.filter(e => e.type === 'usage')
+  // 4. Inventory Health for Donut Chart
+  const healthChartData = useMemo(() => {
+    const healthyCount = stock.length - critical.length - low.length
+    return [
+      { name: 'Healthy (OK)', value: healthyCount, fill: '#1a6b3c' },
+      { name: 'Low Stock', value: low.length, fill: '#d97706' },
+      { name: 'Critical', value: critical.length, fill: '#dc2626' }
+    ].filter(d => d.value > 0)
+  }, [stock, critical, low])
 
-  //STEP 2: group by date for the line chart
-  const dailyDataMap = usageLogs.reduce((acc, log) => {
-    const date = log.created_at.split('T')[0]
-    if (!acc[date]) acc[date] = { date, Total: 0}
-    acc[date].Total += Number(log.qty)
-    return acc
-  }, {})
+  // --- HANDLERS ---
+  async function handleSaveThreshold(itemId) {
+    const val = Number(editingThreshold)
+    if (isNaN(val) || val < 0) return
 
-  //convert our grouped object back into an array sorted by date
-  const dailyChartData = Object.values(dailyDataMap).sort((a,b) => new Date(a.date) - new Date(b.date))
-  
-  //STEP 3: group by t=item for the bar chart
-  const itemUsageMap = usageLogs.reduce((acc, log) => {
-    if (!acc[log.item_name]) acc[log.item_name] = { name: log.item_name, Amount: 0}
-    acc[log.item_name].Amount += Number(log.qty)
-    return acc
-  }, {})
-
-  // Sort descending by amount, and slice the top 5
-  const itemChartData = Object.values(itemUsageMap).sort((a,b) => b.Amount - a.Amount).slice(0, 5)
+    setUpdatingThreshold(true)
+    try {
+      if (isMockMode()) {
+        setTimeout(() => {
+          mockDb.updateItem(itemId, { threshold_qty: val })
+          setEditingItemId(null)
+          setUpdatingThreshold(false)
+        }, 300)
+      } else {
+        const { error } = await supabase
+          .from('inventory_items')
+          .update({ threshold_qty: val })
+          .eq('id', itemId)
+        
+        if (error) throw error
+        setEditingItemId(null)
+        setUpdatingThreshold(false)
+        // Since we don't have realtime subscription directly on the view, we might need a manual refresh,
+        // but for now relying on user refresh or mock db events is sufficient.
+      }
+    } catch (err) {
+      console.error('Failed to update threshold:', err)
+      setUpdatingThreshold(false)
+    }
+  }
 
   return (
-    <div className = "space-y-4">
+    <div className="space-y-6">
       {/* Header Section */}
-      <div className = "flex items-start justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
         <div>
-          <h1 className = "text-[16px] font-semibold text-app-textPrimary">NGO Dashboard</h1>
-          <p className="mt-1 text-[12px] text-app-textSecondary">
-            Monitor inventory, analyze trends and manage master grocery items.
+          <h1 className="text-[18px] font-semibold text-app-textPrimary">NGO Monitoring Dashboard</h1>
+          <p className="mt-1 text-[13px] text-app-textSecondary">
+            Monitor single-school inventory, analyze consumption trends, and identify refill needs.
           </p>
         </div>
-        <LiveDot />
+        
+        {/* Global Controls */}
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 rounded-lg border border-app-border bg-white px-3 h-[36px]">
+            <Calendar size={14} className="text-app-textSecondary" />
+            <select
+              value={dateRange}
+              onChange={(e) => setDateRange(e.target.value)}
+              className="text-[13px] text-app-textPrimary focus:outline-none bg-transparent cursor-pointer"
+            >
+              <option value="7days">Last 7 Days</option>
+              <option value="30days">Last 30 Days</option>
+              <option value="all">All Time</option>
+            </select>
+          </div>
+          <LiveDot />
+        </div>
       </div>
 
       {/* Tab Navigation Menu */}
-      <div className = "flex gap-2 border-b border-app-border pb-px">
+      <div className="flex gap-2 border-b border-app-border pb-px">
         {TABS.map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
             className={`px-4 py-2 text-[13px] font-medium transition-colors ${
-              activeTab === tab? 'border-b-2 border-app-greenMid text-app-greenMid'
+              activeTab === tab
+              ? 'border-b-2 border-app-greenMid text-app-greenMid'
               : 'border-b-2 border-transparent text-app-textSecondary hover:text-app-textPrimary'
-
             }`}
-            >
-              {tab}
-            </button>
+          >
+            {tab}
+          </button>
         ))}
       </div>
 
-      {/* Tab contents using conditional rendering */}
-
+      {/* --- OVERVIEW TAB --- */}
       {activeTab === 'Overview' && (
-        <div className="space-y-4">
-          {/* KPI stat Card */}
+        <div className="space-y-4 animate-in fade-in duration-300">
+          {/* KPI Stat Cards */}
           <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-            <StatCard label="Items Tracked" value={stock.length} />
-            <StatCard label="Today's Entries" value={todayEntriesCount} />
-            <StatCard label="Low Stock" value={low.length} colour="text-app-amber" />
-            <StatCard label="Critical" value={critical.length} colour="text-app-red" />
+            <StatCard label="Total Tracked Items" value={stock.length} />
+            <StatCard label="Entries in Period" value={filteredEntries.length} />
+            <StatCard label="Low Stock Items" value={low.length} colour="text-app-amber" />
+            <StatCard label="Critical Items" value={critical.length} colour="text-app-red" />
           </div>
 
-        <div className="grid gap-4 lg:grid-cols-[1fr,1fr]">
-          {/* Alerts Section */}
-          <div className="rounded-[10px] border border-app-border bg-app-surface shadow-sm
-          shadow-black/5 flex flex-col overflow-hidden h-[300px]">
-            <div className="border-b border-app-border px-5 py-4 flex items-center gap-2">
-              <AlertCircle size={16} className="text-app-amber" />
-              <h2 className="text-[14px] font-semibold text-app-textPrimary">Needs Attention</h2>
+          <div className="grid gap-4 lg:grid-cols-[1fr,1fr]">
+            {/* Alerts Section */}
+            <div className="rounded-[10px] border border-app-border bg-app-surface shadow-sm shadow-black/5 flex flex-col overflow-hidden h-[340px]">
+              <div className="border-b border-app-border px-5 py-4 flex items-center gap-2 bg-app-surfaceAlt/50">
+                <AlertCircle size={16} className="text-app-amber" />
+                <h2 className="text-[14px] font-semibold text-app-textPrimary">Refill Action Required</h2>
+              </div>
+              <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                {!hasAlerts ? (
+                  <div className="flex flex-col items-center justify-center h-full text-center space-y-2 opacity-70">
+                    <div className="h-10 w-10 rounded-full bg-app-greenPale flex items-center justify-center">
+                      <div className="h-4 w-4 rounded-full bg-app-greenMid"></div>
+                    </div>
+                    <p className="text-[13px] text-app-textSecondary">All inventory items are at healthy levels.</p>
+                  </div>
+                ) : (
+                  <>
+                    {critical.map(item => (
+                      <AlertStrip key={item.item_id} status="critical" title={item.item_name}
+                      description={`${item.current_stock} ${item.unit} remaining · Threshold: ${item.threshold_qty} ${item.unit}`} />
+                    ))}
+                    {low.map(item => (
+                      <AlertStrip key={item.item_id} status="low" title={item.item_name}
+                      description={`${item.current_stock} ${item.unit} remaining · Threshold: ${item.threshold_qty} ${item.unit}`} />
+                    ))}
+                  </>
+                )}
+              </div>
             </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-2">
-              {!hasAlerts ? (
-                <p className ="text-[13px] text-app-textSecondary text-center mt-8">All items are at healthy levels.</p>
-              ) : (
-                <>
-                 {critical.map(item => (
-                     <AlertStrip key={item.item_id} status="critical" title={item.item_name}
-                     description={`${item.current_stock} ${item.unit} remaining · Threshold: ${item.threshold_qty} ${item.unit}`} />
-                  ))}
-                  {low.map(item => (
-                     <AlertStrip key={item.item_id} status="low" title={item.item_name}
-                     description={`${item.current_stock} ${item.unit} remaining · Threshold: ${item.threshold_qty} ${item.unit}`} />
-                  ))}
-                </>
-              )}
-            </div>
-          </div>
 
-          {/* Recent activity section */}
-          <div className="rounded-[10px] border border-app-border bg-app-surface shadow-sm shadow-black/5 flex flex-col overflow-hidden h-[300px]">
-              <div className="border-b border-app-border px-5 py-4">
-                <h2 className="text-[14px] font-semibold text-app-textPrimary">Recent Activity</h2>
+            {/* Recent Activity Section */}
+            <div className="rounded-[10px] border border-app-border bg-app-surface shadow-sm shadow-black/5 flex flex-col overflow-hidden h-[340px]">
+              <div className="border-b border-app-border px-5 py-4 bg-app-surfaceAlt/50">
+                <h2 className="text-[14px] font-semibold text-app-textPrimary">Recent Activity Log</h2>
               </div>
               <div className="flex-1 overflow-y-auto">
-                {entries.length === 0 ? (
-                  <p className="p-4 text-center text-[13px] text-app-textSecondary mt-4">No recent activity.</p>
+                {filteredEntries.length === 0 ? (
+                  <p className="p-4 text-center text-[13px] text-app-textSecondary mt-8 opacity-70">No activity recorded in this period.</p>
                 ) : (
-                  entries.slice(0, 10).map((entry, idx) => (
+                  filteredEntries.slice(0, 10).map((entry, idx) => (
                     <ActivityRow key={`${entry.type}-${entry.id}-${idx}`} entry={entry} />
                   ))
                 )}
@@ -156,33 +240,32 @@ export default function NgoDashboard() {
         </div>
       )}
 
-            {activeTab === 'Stock Status' && (
-        <div className="space-y-4">
-          {/* Search and Filter Bar */}
+      {/* --- STOCK STATUS TAB --- */}
+      {activeTab === 'Stock Status' && (
+        <div className="space-y-4 animate-in fade-in duration-300">
           <div className="flex flex-col sm:flex-row gap-3">
             <input
               type="text"
-              placeholder="Search items..."
+              placeholder="Search items by name..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-[36px] flex-1 rounded-lg border border-app-border bg-white px-3 text-[13px] text-app-textPrimary focus:border-app-greenMid focus:outline-none"
+              className="h-[36px] flex-1 rounded-lg border border-app-border bg-white px-3 text-[13px] text-app-textPrimary focus:border-app-greenMid focus:outline-none shadow-sm shadow-black/5"
             />
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="h-[36px] rounded-lg border border-app-border bg-white px-3 text-[13px] text-app-textPrimary focus:border-app-greenMid focus:outline-none"
+              className="h-[36px] w-full sm:w-[180px] rounded-lg border border-app-border bg-white px-3 text-[13px] text-app-textPrimary focus:border-app-greenMid focus:outline-none shadow-sm shadow-black/5 cursor-pointer"
             >
               <option value="All">All Statuses</option>
-              <option value="OK">OK</option>
-              <option value="Low">Low</option>
+              <option value="OK">Healthy (OK)</option>
+              <option value="Low">Low Stock</option>
               <option value="Critical">Critical</option>
             </select>
           </div>
 
-          {/* Table Container */}
           <div className="overflow-hidden rounded-[10px] border border-app-border bg-app-surface shadow-sm shadow-black/5">
-            <div className="border-b border-app-border px-5 py-4">
-              <h2 className="text-[14px] font-semibold text-app-textPrimary">Current Inventory</h2>
+            <div className="border-b border-app-border px-5 py-4 bg-app-surfaceAlt/50">
+              <h2 className="text-[14px] font-semibold text-app-textPrimary">Detailed Inventory Snapshot</h2>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-[13px]">
@@ -190,20 +273,20 @@ export default function NgoDashboard() {
                   <tr className="border-b border-app-border bg-app-surfaceAlt text-[11px] uppercase tracking-[0.5px] text-app-textSecondary">
                     <th className="px-5 py-3 font-semibold text-left">Item</th>
                     <th className="px-5 py-3 font-semibold text-right">In Stock</th>
-                    <th className="px-5 py-3 font-semibold text-right">Threshold</th>
-                    <th className="px-5 py-3 font-semibold text-left w-[120px]">Level</th>
-                    <th className="px-5 py-3 font-semibold text-left w-[100px]">Status</th>
+                    <th className="px-5 py-3 font-semibold text-right">Alert Threshold</th>
+                    <th className="px-5 py-3 font-semibold text-left w-[140px]">Capacity Level</th>
+                    <th className="px-5 py-3 font-semibold text-left w-[120px]">Risk Status</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredStock.length === 0 ? (
                     <tr>
-                      <td colSpan="5" className="px-4 py-8 text-center">
+                      <td colSpan="5" className="px-4 py-12 text-center">
                         <p className="text-[13px] font-medium text-app-textPrimary">No items found</p>
                         <p className="mt-1 text-[12px] text-app-textSecondary">
                           {searchQuery || statusFilter !== 'All' 
-                            ? `No items match your filters.` 
-                            : 'No inventory items tracked yet.'}
+                            ? `No items match your active filters.` 
+                            : 'No inventory items are being tracked.'}
                         </p>
                       </td>
                     </tr>
@@ -215,13 +298,44 @@ export default function NgoDashboard() {
                       return (
                         <tr key={item.item_id} className={`border-b border-app-border last:border-0 transition-colors ${rowBg}`}>
                           <td className="px-5 py-3.5 font-medium text-app-textPrimary">{item.item_name}</td>
-                          <td className="px-5 py-3.5 text-right font-medium text-app-textPrimary">
+                          <td className="px-5 py-3.5 text-right font-semibold text-app-textPrimary">
                             {item.current_stock} <span className="text-app-textSecondary font-normal">{item.unit}</span>
                           </td>
-                          <td className="px-5 py-3.5 text-right text-app-textSecondary">
-                            {item.threshold_qty} <span className="font-normal">{item.unit}</span>
+                          <td className="px-5 py-3.5 text-right">
+                            {editingItemId === item.item_id ? (
+                              <div className="flex items-center justify-end gap-1">
+                                <input
+                                  type="number"
+                                  autoFocus
+                                  min="0"
+                                  disabled={updatingThreshold}
+                                  value={editingThreshold}
+                                  onChange={(e) => setEditingThreshold(e.target.value)}
+                                  className="w-[60px] h-[28px] rounded border border-app-border px-2 text-[12px] text-right focus:border-app-greenMid focus:outline-none"
+                                />
+                                <button
+                                  disabled={updatingThreshold}
+                                  onClick={() => handleSaveThreshold(item.item_id)}
+                                  className="p-1 text-app-greenMid hover:bg-app-greenPale rounded disabled:opacity-50"
+                                >
+                                  <Check size={14} />
+                                </button>
+                                <button
+                                  disabled={updatingThreshold}
+                                  onClick={() => setEditingItemId(null)}
+                                  className="p-1 text-app-textSecondary hover:bg-app-surfaceAlt rounded disabled:opacity-50"
+                                >
+                                  <X size={14} />
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="flex items-center justify-end gap-2 group cursor-pointer" onClick={() => { setEditingItemId(item.item_id); setEditingThreshold(item.threshold_qty) }}>
+                                <span className="text-app-textSecondary">{item.threshold_qty} <span className="font-normal">{item.unit}</span></span>
+                                <Pencil size={12} className="text-app-textSecondary opacity-0 group-hover:opacity-100 transition-opacity" />
+                              </div>
+                            )}
                           </td>
-                          <td className="px-5 py-3.5">
+                          <td className="px-5 py-3.5 pr-8">
                             <ProgressBar percentage={stockBarPct(item.current_stock, item.threshold_qty)} status={status} />
                           </td>
                           <td className="px-5 py-3.5">
@@ -238,63 +352,101 @@ export default function NgoDashboard() {
         </div>
       )}
 
-
-            {activeTab === 'Usage Trends' && (
-        <div className="space-y-4">
+      {/* --- USAGE TRENDS TAB --- */}
+      {activeTab === 'Usage Trends' && (
+        <div className="space-y-4 animate-in fade-in duration-300">
           <div className="grid gap-4 lg:grid-cols-2">
             
-            {/* Line Chart Card: Daily Consumption */}
-            <div className="rounded-[10px] border border-app-border bg-app-surface shadow-sm shadow-black/5 p-5">
-              <h2 className="text-[14px] font-semibold text-app-textPrimary mb-4">Daily Consumption Trend</h2>
-              <div className="h-[250px] w-full">
-                {dailyChartData.length === 0 ? (
-                  <div className="h-full flex items-center justify-center text-[13px] text-app-textSecondary">No usage data available.</div>
+            {/* Line Chart Card */}
+            <div className="rounded-[10px] border border-app-border bg-app-surface shadow-sm shadow-black/5 p-5 flex flex-col">
+              <div className="mb-6">
+                <h2 className="text-[14px] font-semibold text-app-textPrimary">Daily Consumption Trend</h2>
+                <p className="text-[12px] text-app-textSecondary mt-1">Total quantity (kg/L) of all grocery items consumed per day.</p>
+              </div>
+              <div className="h-[250px] w-full mt-auto">
+                {chartData.dailyChart.length === 0 ? (
+                  <div className="h-full flex items-center justify-center text-[13px] text-app-textSecondary opacity-70">No usage data for this period.</div>
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={dailyChartData}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                      <XAxis dataKey="date" tick={{fontSize: 11, fill: '#555555'}} axisLine={false} tickLine={false} />
-                      <YAxis tick={{fontSize: 11, fill: '#555555'}} axisLine={false} tickLine={false} />
-                      <Tooltip contentStyle={{ borderRadius: '8px', fontSize: '12px', border: '1px solid rgba(0,0,0,0.1)' }} />
-                      <Line type="monotone" dataKey="Total" stroke="#1a6b3c" strokeWidth={3} dot={{r: 4, fill: '#1a6b3c'}} />
+                    <LineChart data={chartData.dailyChart}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
+                      <XAxis dataKey="date" tick={{fontSize: 11, fill: '#6b7280'}} axisLine={false} tickLine={false} tickMargin={10} />
+                      <YAxis tick={{fontSize: 11, fill: '#6b7280'}} axisLine={false} tickLine={false} tickMargin={10} />
+                      <Tooltip 
+                        contentStyle={{ borderRadius: '8px', fontSize: '12px', border: '1px solid rgba(0,0,0,0.05)', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
+                        itemStyle={{ color: '#1a6b3c', fontWeight: 600 }}
+                      />
+                      <Line type="monotone" dataKey="Total" name="Total Consumed" stroke="#1a6b3c" strokeWidth={3} dot={{r: 4, fill: '#1a6b3c', strokeWidth: 0}} activeDot={{r: 6}} />
                     </LineChart>
                   </ResponsiveContainer>
                 )}
               </div>
             </div>
 
-            {/* Bar Chart Card: Most Used Items */}
-            <div className="rounded-[10px] border border-app-border bg-app-surface shadow-sm shadow-black/5 p-5">
-              <h2 className="text-[14px] font-semibold text-app-textPrimary mb-4">Most Used Items (All Time)</h2>
-              <div className="h-[250px] w-full">
-                {itemChartData.length === 0 ? (
-                  <div className="h-full flex items-center justify-center text-[13px] text-app-textSecondary">No usage data available.</div>
+            {/* Bar Chart Card */}
+            <div className="rounded-[10px] border border-app-border bg-app-surface shadow-sm shadow-black/5 p-5 flex flex-col">
+              <div className="mb-6">
+                <h2 className="text-[14px] font-semibold text-app-textPrimary">Top Used Items</h2>
+                <p className="text-[12px] text-app-textSecondary mt-1">The grocery items with the highest consumption by volume.</p>
+              </div>
+              <div className="h-[250px] w-full mt-auto">
+                {chartData.itemChart.length === 0 ? (
+                  <div className="h-full flex items-center justify-center text-[13px] text-app-textSecondary opacity-70">No usage data for this period.</div>
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={itemChartData} layout="vertical" margin={{ top: 0, right: 0, bottom: 0, left: 40 }}>
-                      <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e5e7eb" />
-                      <XAxis type="number" tick={{fontSize: 11, fill: '#555555'}} axisLine={false} tickLine={false} />
-                      <YAxis dataKey="name" type="category" tick={{fontSize: 11, fill: '#555555'}} axisLine={false} tickLine={false} />
-                      <Tooltip contentStyle={{ borderRadius: '8px', fontSize: '12px', border: '1px solid rgba(0,0,0,0.1)' }} />
-                      <Bar dataKey="Amount" fill="#d97706" radius={[0, 4, 4, 0]} barSize={24} />
+                    <BarChart data={chartData.itemChart} layout="vertical" margin={{ top: 0, right: 20, bottom: 0, left: 40 }}>
+                      <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f3f4f6" />
+                      <XAxis type="number" tick={{fontSize: 11, fill: '#6b7280'}} axisLine={false} tickLine={false} tickMargin={10} />
+                      <YAxis dataKey="name" type="category" tick={{fontSize: 11, fill: '#6b7280', fontWeight: 500}} axisLine={false} tickLine={false} />
+                      <Tooltip 
+                        contentStyle={{ borderRadius: '8px', fontSize: '12px', border: '1px solid rgba(0,0,0,0.05)', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
+                        cursor={{ fill: '#f9fafb' }}
+                      />
+                      <Bar dataKey="Amount" name="Quantity Used" fill="#059669" radius={[0, 4, 4, 0]} barSize={28} />
                     </BarChart>
                   </ResponsiveContainer>
                 )}
               </div>
             </div>
-
+            
+            {/* Inventory Health Donut Chart */}
+            <div className="rounded-[10px] border border-app-border bg-app-surface shadow-sm shadow-black/5 p-5 flex flex-col lg:col-span-2">
+              <div className="mb-4">
+                <h2 className="text-[14px] font-semibold text-app-textPrimary">Current Inventory Health</h2>
+                <p className="text-[12px] text-app-textSecondary mt-1">Proportion of items currently resting at safe vs critical thresholds.</p>
+              </div>
+              <div className="h-[250px] w-full mt-auto">
+                {healthChartData.length === 0 ? (
+                  <div className="h-full flex items-center justify-center text-[13px] text-app-textSecondary opacity-70">No inventory items tracked.</div>
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={healthChartData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={65}
+                        outerRadius={90}
+                        paddingAngle={4}
+                        dataKey="value"
+                        stroke="none"
+                      >
+                        {healthChartData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.fill} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        contentStyle={{ borderRadius: '8px', fontSize: '12px', border: 'none', boxShadow: '0 4px 12px -2px rgba(0, 0, 0, 0.15)' }}
+                        itemStyle={{ fontWeight: 600 }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                )}
+              </div>
+            </div>
           </div>
-        </div>
-      )}
-
-
-      {activeTab === 'Manage Items' && (
-        <div className="p-8 text-center text-app-textSecondary bg-white border border-app-border rounded-lg">
-          Manage Items Tab Coming Soon!
         </div>
       )}
     </div>
   )
 }
-
-

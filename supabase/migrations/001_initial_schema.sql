@@ -158,3 +158,9 @@ with check (
   school_id = public.get_my_school_id()
   and created_by = auth.uid()
 );
+
+drop policy if exists "items_update" on public.inventory_items;
+create policy "items_update"
+on public.inventory_items
+for update
+using (public.get_my_role() = 'ngo_admin');

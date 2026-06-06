@@ -6,9 +6,10 @@ import { useAuth } from '../../context/AuthContext'
 
 export default function NewItemForm({ open, onClose, onSuccess }) {
   const { profile } = useAuth()
+  const isSchoolStaff = profile?.role === 'school_staff'
   const [name, setName] = useState('')
   const [unit, setUnit] = useState('kg')
-  const [threshold, setThreshold] = useState('')
+  const [threshold, setThreshold] = useState('10') // Default to 10
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
 
@@ -33,7 +34,7 @@ export default function NewItemForm({ open, onClose, onSuccess }) {
           mockDb.saveItem(newItem)
           setSubmitting(false)
           setName('')
-          setThreshold('')
+          setThreshold('10')
           onSuccess()
         }, 300)
       } else {
@@ -42,7 +43,7 @@ export default function NewItemForm({ open, onClose, onSuccess }) {
 
         setSubmitting(false)
         setName('')
-        setThreshold('')
+        setThreshold('10')
         onSuccess()
       }
     } catch (err) {
@@ -89,22 +90,24 @@ export default function NewItemForm({ open, onClose, onSuccess }) {
               </select>
             </div>
             
-            <div className="flex-1">
-              <label htmlFor="itemThreshold" className="mb-1.5 block text-[11px] font-medium text-app-textSecondary">
-                Low Alert Threshold
-              </label>
-              <input
-                id="itemThreshold"
-                type="number"
-                min="0"
-                step="0.1"
-                required
-                value={threshold}
-                onChange={(e) => setThreshold(e.target.value)}
-                placeholder="e.g. 10"
-                className="h-[36px] w-full rounded-[6px] border border-app-border bg-white px-3 text-[13px] text-app-textPrimary focus:border-app-greenMid focus:outline-none"
-              />
-            </div>
+            {!isSchoolStaff && (
+              <div className="flex-1">
+                <label htmlFor="itemThreshold" className="mb-1.5 block text-[11px] font-medium text-app-textSecondary">
+                  Low Alert Threshold
+                </label>
+                <input
+                  id="itemThreshold"
+                  type="number"
+                  min="0"
+                  step="0.1"
+                  required
+                  value={threshold}
+                  onChange={(e) => setThreshold(e.target.value)}
+                  placeholder="e.g. 10"
+                  className="h-[36px] w-full rounded-[6px] border border-app-border bg-white px-3 text-[13px] text-app-textPrimary focus:border-app-greenMid focus:outline-none"
+                />
+              </div>
+            )}
           </div>
         </div>
 
