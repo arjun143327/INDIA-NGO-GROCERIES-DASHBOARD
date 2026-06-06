@@ -10,7 +10,7 @@ export function useInventoryItems() {
   const [error, setError] = useState(null)
 
   const refetch = useCallback(async () => {
-    if (!profile?.school_id) {
+    if (profile?.role !== 'ngo_admin' && !profile?.school_id) {
       setItems([])
       setLoading(false)
       return
@@ -27,12 +27,18 @@ export function useInventoryItems() {
       return
     }
 
-    const { data, error: nextError } = await supabase
+    let query = supabase
       .from('inventory_items')
       .select('*')
-      .eq('school_id', profile.school_id)
       .eq('is_active', true)
       .order('name')
+
+    //Only filter by school if they are school staff
+    if (profile?.role === 'school_staff') {
+      query = query.eq('school_id', profile.school_id)
+    }
+
+    const { data, error: nextError} = await query
 
     if (nextError) {
       setError('Could not load items. Try refreshing.')
@@ -43,7 +49,7 @@ export function useInventoryItems() {
     }
 
     setLoading(false)
-  }, [profile?.school_id])
+  }, [profile?.school_id, profile?.role])
 
   useEffect(() => {
     refetch()
