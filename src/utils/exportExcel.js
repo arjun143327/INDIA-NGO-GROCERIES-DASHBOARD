@@ -1,4 +1,59 @@
-import * as XLSX from 'xlsx'
+import * as XLSX from 'xlsx-js-style'
+
+function applyStylesToWorksheet(worksheet, hasMetadata) {
+  if (!worksheet['!ref']) return
+  
+  const range = XLSX.utils.decode_range(worksheet['!ref'])
+  const headerRowIndex = hasMetadata ? 3 : 0 // 0-indexed row for column headers (A4 = row index 3)
+  
+  const colWidths = []
+
+  for (let R = range.s.r; R <= range.e.r; R++) {
+    for (let C = range.s.c; C <= range.e.c; C++) {
+      const cellAddress = {c: C, r: R}
+      const cellRef = XLSX.utils.encode_cell(cellAddress)
+      const cell = worksheet[cellRef]
+
+      if (!cell) continue
+
+      const cellTextLength = cell.v ? String(cell.v).length : 0
+      colWidths[C] = Math.max(colWidths[C] || 10, cellTextLength + 2)
+
+      if (!cell.s) cell.s = {}
+
+      if (hasMetadata && R === 0 && C === 0) {
+        // Title
+        cell.s = { font: { bold: true, sz: 14, color: { rgb: "1F2937" } } }
+      } else if (hasMetadata && R === 1 && C === 0) {
+        // Subtitle
+        cell.s = { font: { italic: true, sz: 11, color: { rgb: "6B7280" } } }
+      } else if (R === headerRowIndex) {
+        // Table Headers
+        cell.s = {
+          fill: { fgColor: { rgb: "1A6B3C" } },
+          font: { bold: true, color: { rgb: "FFFFFF" } },
+          alignment: { vertical: "center" }
+        }
+      } else if (R > headerRowIndex) {
+        // Data cells styling
+        const val = String(cell.v).toUpperCase()
+        if (val === 'CRITICAL') {
+          cell.s = { fill: { fgColor: { rgb: "FEE2E2" } }, font: { color: { rgb: "DC2626" }, bold: true } }
+        } else if (val === 'LOW' || val === 'LOW STOCK') {
+          cell.s = { fill: { fgColor: { rgb: "FEF3C7" } }, font: { color: { rgb: "D97706" }, bold: true } }
+        } else if (val === 'OK' || val === 'HEALTHY (OK)') {
+          cell.s = { fill: { fgColor: { rgb: "DCFCE7" } }, font: { color: { rgb: "16A34A" }, bold: true } }
+        } else if (val === 'INCOMING STOCK') {
+          cell.s = { fill: { fgColor: { rgb: "DBEAFE" } }, font: { color: { rgb: "2563EB" }, bold: true } }
+        } else if (val === 'DAILY USAGE') {
+          cell.s = { fill: { fgColor: { rgb: "F3F4F6" } }, font: { color: { rgb: "4B5563" }, bold: true } }
+        }
+      }
+    }
+  }
+
+  worksheet['!cols'] = colWidths.map(w => ({ wch: Math.min(w, 50) }))
+}
 
 /**
  * Converts an array of objects to an Excel file and triggers a download.
@@ -23,6 +78,8 @@ export function downloadExcel(dataArray, sheetName, fileName, metadata = null) {
   } else {
     worksheet = XLSX.utils.json_to_sheet(dataArray)
   }
+
+  applyStylesToWorksheet(worksheet, !!metadata)
 
   const workbook = XLSX.utils.book_new()
   XLSX.utils.book_append_sheet(workbook, worksheet, sheetName)
@@ -57,6 +114,9 @@ export function downloadMultiSheetExcel(sheetsData, fileName, metadata = null) {
       } else {
         worksheet = XLSX.utils.json_to_sheet(data)
       }
+      
+      applyStylesToWorksheet(worksheet, !!metadata)
+      
       XLSX.utils.book_append_sheet(workbook, worksheet, sheetName)
     }
   })

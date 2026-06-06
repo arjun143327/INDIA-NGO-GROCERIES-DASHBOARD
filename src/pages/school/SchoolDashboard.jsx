@@ -24,7 +24,7 @@ export default function SchoolDashboard() {
   
   // Data hooks
   const { stock, loading: stockLoading, refetch: refetchStock } = useCurrentStock()
-  const { entries, loading: feedLoading, refetch: refetchFeed } = useActivityFeed(10)
+  const { entries, loading: feedLoading, refetch: refetchFeed } = useActivityFeed(100)
   const { critical, low, hasAlerts } = useAlerts(stock)
 
   // Realtime subscription (or mock window events)
@@ -175,14 +175,8 @@ export default function SchoolDashboard() {
           {/* left column: inventory preview */}
           <div className="flex flex-col overflow-hidden rounded-[10px]
           border border-app-border bg-app-surface">
-            <div className="border-b border-app-border px-4 py-[14px] flex items-center justify-between">
+            <div className="border-b border-app-border px-4 py-[14px]">
               <h2 className = "text-[13px] font-semibold text-app-textPrimary">Inventory preview</h2>
-              <button
-                onClick={() => handleExportInventory(stock, 'Inventory Preview', 'School_Inventory')}
-                className="flex items-center gap-1.5 text-[11px] font-medium text-app-textSecondary hover:text-app-greenMid transition-colors"
-              >
-                <Download size={12} /> Excel
-              </button>
             </div>
               <div className="overflow-x-auto max-h-[300px] overflow-y-auto">
                 <table className="w-full text-left text-[13px]">
@@ -213,14 +207,8 @@ export default function SchoolDashboard() {
             </div>
             {/* Right Column: Activity Preview */}
             <div className="flex flex-col overflow-hidden rounded-[10px] border border-app-border bg-app-surface">
-              <div className="border-b border-app-border px-4 py-[14px] flex items-center justify-between">
+              <div className="border-b border-app-border px-4 py-[14px]">
                 <h2 className="text-[13px] font-semibold text-app-textPrimary">Recent Activity</h2>
-                <button
-                  onClick={() => handleExportActivity(entries.slice(0, 10), 'Recent Activity', 'School_Recent_Activity')}
-                  className="flex items-center gap-1.5 text-[11px] font-medium text-app-textSecondary hover:text-app-greenMid transition-colors"
-                >
-                  <Download size={12} /> Excel
-                </button>
               </div>
               <div className="flex flex-col flex-1">
                 {feedLoading ? (
@@ -360,7 +348,7 @@ export default function SchoolDashboard() {
             <Download size={14} /> Download Excel
           </button>
         </div>
-        <div className="flex flex-col">
+        <div className="flex flex-col max-h-[500px] overflow-y-auto">
           {feedLoading ? (
             <div className="px-4 py-4 text-center text-[12px] text-app-textSecondary">Loading activity...</div>
           ) : filteredEntries.length === 0 ? (
