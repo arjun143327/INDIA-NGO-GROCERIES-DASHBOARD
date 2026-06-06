@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { Search, Filter, AlertCircle, TrendingDown, TrendingUp, Package, ClipboardList, ArrowRightLeft, Activity, BarChart2 } from 'lucide-react'
+import { Search, Filter, AlertCircle, TrendingDown, TrendingUp, Package, ClipboardList, ArrowRightLeft, Activity, BarChart2, Download } from 'lucide-react'
 import StatCard from '../../components/ui/StatCard'
 import AlertStrip from '../../components/ui/AlertStrip'
 import ProgressBar from '../../components/ui/ProgressBar'
@@ -12,6 +12,7 @@ import { useRealtimeStock } from '../../hooks/useRealtimeStock'
 import { stockStatus } from '../../utils/stockStatus'
 import StockEntryForm from '../../components/forms/StockEntryForm'
 import UsageEntryForm from '../../components/forms/UsageEntryForm'
+import { downloadExcel } from '../../utils/exportExcel'
 
 export default function SchoolDashboard() {
   const [activeModal, setActiveModal] = useState(null)
@@ -60,8 +61,41 @@ export default function SchoolDashboard() {
     if (activityTypeFilter === 'Usage') return entry.type === 'usage'
     return true
   })
-   
-  
+  // --- EXPORT HANDLERS ---
+  const handleExportInventory = (dataToExport, title, filename) => {
+    const formattedData = dataToExport.map(item => ({
+      'Item Name': item.item_name,
+      'Current Stock': `${item.current_stock} ${item.unit}`,
+      'Threshold': `${item.threshold_qty} ${item.unit}`,
+      'Status': stockStatus(item.current_stock, item.threshold_qty).toUpperCase()
+    }))
+    
+    downloadExcel(formattedData, 'Inventory', filename, {
+      title: `School Groceries Dashboard - ${title}`,
+      subtitle: `Exported on: ${new Date().toLocaleString()}`
+    })
+  }
+
+  const handleExportActivity = (dataToExport, title, filename) => {
+    const formattedData = dataToExport.map(entry => {
+      const date = new Date(entry.created_at)
+      const isUsage = entry.type === 'usage'
+      return {
+        'Activity Type': isUsage ? 'Daily Usage' : 'Incoming Stock',
+        'Item Name': entry.item_name,
+        'Quantity': `${entry.qty} ${entry.unit}`,
+        'Date': date.toLocaleDateString(),
+        'Time': date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        ...(isUsage ? { 'Meal Type': entry.meal_type || 'N/A' } : {})
+      }
+    })
+
+    downloadExcel(formattedData, 'Activity Log', filename, {
+      title: `School Groceries Dashboard - ${title}`,
+      subtitle: `Exported on: ${new Date().toLocaleString()}`
+    })
+  }
+
   return (
     <div className="space-y-4">
       {/* Header and Actions */}
@@ -141,9 +175,15 @@ export default function SchoolDashboard() {
           {/* left column: inventory preview */}
           <div className="flex flex-col overflow-hidden rounded-[10px]
           border border-app-border bg-app-surface">
-            <div className="border-b border-app-border px-4 py-[14px]">
+            <div className="border-b border-app-border px-4 py-[14px] flex items-center justify-between">
               <h2 className = "text-[13px] font-semibold text-app-textPrimary">Inventory preview</h2>
-              </div>
+              <button
+                onClick={() => handleExportInventory(stock, 'Inventory Preview', 'School_Inventory')}
+                className="flex items-center gap-1.5 text-[11px] font-medium text-app-textSecondary hover:text-app-greenMid transition-colors"
+              >
+                <Download size={12} /> Excel
+              </button>
+            </div>
               <div className="overflow-x-auto max-h-[300px] overflow-y-auto">
                 <table className="w-full text-left text-[13px]">
                   <thead>
@@ -173,8 +213,14 @@ export default function SchoolDashboard() {
             </div>
             {/* Right Column: Activity Preview */}
             <div className="flex flex-col overflow-hidden rounded-[10px] border border-app-border bg-app-surface">
-              <div className="border-b border-app-border px-4 py-[14px]">
+              <div className="border-b border-app-border px-4 py-[14px] flex items-center justify-between">
                 <h2 className="text-[13px] font-semibold text-app-textPrimary">Recent Activity</h2>
+                <button
+                  onClick={() => handleExportActivity(entries.slice(0, 10), 'Recent Activity', 'School_Recent_Activity')}
+                  className="flex items-center gap-1.5 text-[11px] font-medium text-app-textSecondary hover:text-app-greenMid transition-colors"
+                >
+                  <Download size={12} /> Excel
+                </button>
               </div>
               <div className="flex flex-col flex-1">
                 {feedLoading ? (
@@ -219,8 +265,14 @@ export default function SchoolDashboard() {
           </div>
 
          <div className="overflow-hidden rounded-[10px] border border-app-border bg-app-surface shadow-sm shadow-black/5">
-        <div className="border-b border-app-border px-5 py-4">
+        <div className="border-b border-app-border px-5 py-4 flex items-center justify-between">
           <h2 className="text-[14px] font-semibold text-app-textPrimary">Current Inventory</h2>
+          <button
+            onClick={() => handleExportInventory(filteredStock, 'Current Inventory', 'School_Inventory')}
+            className="flex items-center gap-1.5 text-[12px] font-medium text-app-textSecondary hover:text-app-greenMid transition-colors"
+          >
+            <Download size={14} /> Download Excel
+          </button>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-[13px]">
@@ -299,8 +351,14 @@ export default function SchoolDashboard() {
           </div>
         {/* Recent Entries */}
       <div className="overflow-hidden rounded-[10px] border border-app-border bg-app-surface">
-        <div className="border-b border-app-border px-4 py-[14px]">
+        <div className="border-b border-app-border px-4 py-[14px] flex items-center justify-between">
           <h2 className="text-[13px] font-semibold text-app-textPrimary">Recent Activity</h2>
+          <button
+            onClick={() => handleExportActivity(filteredEntries, 'Activity Log', `School_${activityTypeFilter}_Log`)}
+            className="flex items-center gap-1.5 text-[12px] font-medium text-app-textSecondary hover:text-app-greenMid transition-colors"
+          >
+            <Download size={14} /> Download Excel
+          </button>
         </div>
         <div className="flex flex-col">
           {feedLoading ? (
