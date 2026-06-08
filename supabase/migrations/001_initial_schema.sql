@@ -18,8 +18,14 @@ create table if not exists public.profiles (
 create table if not exists public.inventory_items (
   id uuid primary key default gen_random_uuid(),
   school_id uuid not null references public.schools (id) on delete cascade,
-  name text not null,
+  name_en text not null,
+  name_ta text not null,
+  category text,
   unit text not null,
+  default_quantity numeric,
+  estimated_cost numeric,
+  purchase_cycle text,
+  image_url text,
   threshold_qty numeric not null default 10,
   is_active boolean not null default true,
   created_at timestamptz not null default now()
@@ -63,8 +69,12 @@ usage_totals as (
 select
   i.school_id,
   i.id as item_id,
-  i.name as item_name,
+  i.name_en,
+  i.name_ta,
+  i.name_en || ' (' || i.name_ta || ')' as item_name,
+  i.category,
   i.unit,
+  i.image_url,
   i.threshold_qty,
   coalesce(st.total_added, 0) - coalesce(ut.total_used, 0) as current_stock
 from public.inventory_items i

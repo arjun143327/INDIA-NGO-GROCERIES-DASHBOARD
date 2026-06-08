@@ -1,10 +1,6 @@
-const INITIAL_ITEMS = [
-  { id: 'item-1', school_id: 'mock-school-1', name: 'Rice', unit: 'kg', threshold_qty: 50, is_active: true },
-  { id: 'item-2', school_id: 'mock-school-1', name: 'Dal (Lentils)', unit: 'kg', threshold_qty: 20, is_active: true },
-  { id: 'item-3', school_id: 'mock-school-1', name: 'Cooking Oil', unit: 'litres', threshold_qty: 15, is_active: true },
-  { id: 'item-4', school_id: 'mock-school-1', name: 'Salt', unit: 'kg', threshold_qty: 5, is_active: true },
-  { id: 'item-5', school_id: 'mock-school-1', name: 'Turmeric Powder', unit: 'kg', threshold_qty: 2, is_active: true },
-]
+import seedData from './mockDb_seed.json'
+
+const INITIAL_ITEMS = seedData
 
 const INITIAL_STOCK = [
   { id: 'se-1', school_id: 'mock-school-1', item_id: 'item-1', qty_added: 120, entry_date: '2026-06-01', notes: 'Initial batch', created_at: new Date('2026-06-01T10:00:00Z').toISOString() },
@@ -52,7 +48,7 @@ export function isMockMode() {
 }
 
 export const mockDb = {
-  getItems: () => getStorageItem('mock_inventory_items', INITIAL_ITEMS),
+  getItems: () => getStorageItem('mock_inventory_items_v2', INITIAL_ITEMS),
   
   saveItem: (item) => {
     const items = mockDb.getItems()
@@ -63,17 +59,17 @@ export const mockDb = {
       created_at: new Date().toISOString(),
       ...item,
     }
-    setStorageItem('mock_inventory_items', [...items, newItem])
+    setStorageItem('mock_inventory_items_v2', [...items, newItem])
     return newItem
   },
 
   updateItem: (id, updates) => {
     const items = mockDb.getItems()
     const updated = items.map(item => item.id === id ? { ...item, ...updates } : item)
-    setStorageItem('mock_inventory_items', updated)
+    setStorageItem('mock_inventory_items_v2', updated)
   },
 
-  getStockEntries: () => getStorageItem('mock_stock_entries', INITIAL_STOCK),
+  getStockEntries: () => getStorageItem('mock_stock_entries_v2', INITIAL_STOCK),
 
   saveStockEntry: (entry) => {
     const entries = mockDb.getStockEntries()
@@ -83,11 +79,11 @@ export const mockDb = {
       created_at: new Date().toISOString(),
       ...entry,
     }
-    setStorageItem('mock_stock_entries', [newEntry, ...entries])
+    setStorageItem('mock_stock_entries_v2', [newEntry, ...entries])
     return newEntry
   },
 
-  getUsageLogs: () => getStorageItem('mock_usage_logs', INITIAL_USAGE),
+  getUsageLogs: () => getStorageItem('mock_usage_logs_v2', INITIAL_USAGE),
 
   saveUsageLog: (log) => {
     const logs = mockDb.getUsageLogs()
@@ -97,7 +93,7 @@ export const mockDb = {
       created_at: new Date().toISOString(),
       ...log,
     }
-    setStorageItem('mock_usage_logs', [newLog, ...logs])
+    setStorageItem('mock_usage_logs_v2', [newLog, ...logs])
     return newLog
   },
 
@@ -118,8 +114,14 @@ export const mockDb = {
       return {
         school_id: item.school_id,
         item_id: item.id,
-        item_name: item.name,
+        name_en: item.name_en,
+        name_ta: item.name_ta,
+        item_name: `${item.name_en} (${item.name_ta})`,
+        category: item.category,
+        image_url: item.image_url,
         unit: item.unit,
+        estimated_cost: item.estimated_cost,
+        purchase_cycle: item.purchase_cycle,
         threshold_qty: item.threshold_qty,
         current_stock: totalAdded - totalUsed,
       }
@@ -128,24 +130,30 @@ export const mockDb = {
 
   getActivityFeed: (limit = 10) => {
     const items = mockDb.getItems()
-    const stock = mockDb.getStockEntries().map(e => ({
-      id: e.id,
-      type: 'stock',
-      qty: e.qty_added,
-      created_at: e.created_at,
-      item_name: items.find(i => i.id === e.item_id)?.name ?? 'Unknown item',
-      unit: items.find(i => i.id === e.item_id)?.unit ?? '',
-    }))
+    const stock = mockDb.getStockEntries().map(e => {
+      const item = items.find(i => i.id === e.item_id)
+      return {
+        id: e.id,
+        type: 'stock',
+        qty: e.qty_added,
+        created_at: e.created_at,
+        item_name: item ? `${item.name_en} (${item.name_ta})` : 'Unknown item',
+        unit: item?.unit ?? '',
+      }
+    })
 
-    const usage = mockDb.getUsageLogs().map(e => ({
-      id: e.id,
-      type: 'usage',
-      qty: e.qty_used,
-      created_at: e.created_at,
-      item_name: items.find(i => i.id === e.item_id)?.name ?? 'Unknown item',
-      unit: items.find(i => i.id === e.item_id)?.unit ?? '',
-      meal_type: e.meal_type,
-    }))
+    const usage = mockDb.getUsageLogs().map(e => {
+      const item = items.find(i => i.id === e.item_id)
+      return {
+        id: e.id,
+        type: 'usage',
+        qty: e.qty_used,
+        created_at: e.created_at,
+        item_name: item ? `${item.name_en} (${item.name_ta})` : 'Unknown item',
+        unit: item?.unit ?? '',
+        meal_type: e.meal_type,
+      }
+    })
 
     return [...stock, ...usage]
       .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))

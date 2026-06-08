@@ -5,6 +5,7 @@ import { isMockMode, mockDb } from '../../utils/mockDb'
 import { useAuth } from '../../context/AuthContext'
 import { useInventoryItems } from '../../hooks/useInventoryItems'
 import NewItemForm from './NewItemForm'
+import SearchableDropdown from '../ui/SearchableDropdown'
 
 export default function StockEntryForm({ open, onClose, onSuccess }) {
   const { profile } = useAuth()
@@ -88,18 +89,11 @@ export default function StockEntryForm({ open, onClose, onSuccess }) {
                   + Add New Catalog Item
                 </button>
               </div>
-              <select
-                id="stockItem"
-                required
+              <SearchableDropdown
+                items={items}
                 value={itemId}
-                onChange={(e) => setItemId(e.target.value)}
-                className="h-[36px] w-full rounded-[6px] border border-app-border bg-white px-3 text-[13px] text-app-textPrimary focus:border-app-greenMid focus:outline-none"
-              >
-                <option value="" disabled>Select an item</option>
-                {items.map(item => (
-                  <option key={item.id} value={item.id}>{item.name}</option>
-                ))}
-              </select>
+                onChange={setItemId}
+              />
             </div>
             
             <div className="flex gap-4">

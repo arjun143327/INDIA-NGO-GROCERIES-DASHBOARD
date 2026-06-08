@@ -15,7 +15,7 @@ import { AlertCircle, Calendar, Pencil, Check, X } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { isMockMode, mockDb } from '../../utils/mockDb'
 
-const TABS = ['Overview', 'Stock Status', 'Usage Trends']
+const TABS = ['Overview', 'Master Catalog', 'Usage Trends']
 
 export default function NgoDashboard() {
   const [activeTab, setActiveTab] = useState('Overview')
@@ -238,8 +238,8 @@ export default function NgoDashboard() {
         </div>
       )}
 
-      {/* --- STOCK STATUS TAB --- */}
-      {activeTab === 'Stock Status' && (
+      {/* --- MASTER CATALOG TAB --- */}
+      {activeTab === 'Master Catalog' && (
         <div className="space-y-4 animate-in fade-in duration-300">
           <div className="flex flex-col sm:flex-row gap-3">
             <input
@@ -263,17 +263,17 @@ export default function NgoDashboard() {
 
           <div className="overflow-hidden rounded-[10px] border border-app-border bg-app-surface shadow-sm shadow-black/5">
             <div className="border-b border-app-border px-5 py-4 bg-app-surfaceAlt/50">
-              <h2 className="text-[14px] font-semibold text-app-textPrimary">Detailed Inventory Snapshot</h2>
+              <h2 className="text-[14px] font-semibold text-app-textPrimary">Bilingual Master Catalog & Inventory</h2>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-[13px]">
                 <thead>
                   <tr className="border-b border-app-border bg-app-surfaceAlt text-[11px] uppercase tracking-[0.5px] text-app-textSecondary">
-                    <th className="px-5 py-3 font-semibold text-left">Item</th>
+                    <th className="px-5 py-3 font-semibold text-left">Item Details</th>
+                    <th className="px-5 py-3 font-semibold text-left">Procurement</th>
                     <th className="px-5 py-3 font-semibold text-right">In Stock</th>
-                    <th className="px-5 py-3 font-semibold text-right">Alert Threshold</th>
-                    <th className="px-5 py-3 font-semibold text-left w-[140px]">Capacity Level</th>
-                    <th className="px-5 py-3 font-semibold text-left w-[120px]">Risk Status</th>
+                    <th className="px-5 py-3 font-semibold text-right">Threshold</th>
+                    <th className="px-5 py-3 font-semibold text-left">Status</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -295,7 +295,23 @@ export default function NgoDashboard() {
                       
                       return (
                         <tr key={item.item_id} className={`border-b border-app-border last:border-0 transition-colors ${rowBg}`}>
-                          <td className="px-5 py-3.5 font-medium text-app-textPrimary">{item.item_name}</td>
+                          <td className="px-5 py-3.5">
+                            <div className="flex items-center gap-3">
+                              {item.image_url && (
+                                <img src={item.image_url} alt={item.name_en} className="w-10 h-10 rounded object-cover shadow-sm" />
+                              )}
+                              <div className="flex flex-col">
+                                <span className="font-semibold text-app-textPrimary">{item.name_en} <span className="text-app-textSecondary font-medium">({item.name_ta})</span></span>
+                                {item.category && <span className="text-[10px] text-app-textSecondary mt-0.5 bg-gray-100 w-fit px-1.5 py-0.5 rounded">{item.category}</span>}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-5 py-3.5">
+                            <div className="flex flex-col">
+                              <span className="font-medium text-app-textPrimary">₹{item.estimated_cost}</span>
+                              <span className="text-[11px] text-app-textSecondary">{item.purchase_cycle || 'Monthly'}</span>
+                            </div>
+                          </td>
                           <td className="px-5 py-3.5 text-right font-semibold text-app-textPrimary">
                             {item.current_stock} <span className="text-app-textSecondary font-normal">{item.unit}</span>
                           </td>
@@ -332,9 +348,6 @@ export default function NgoDashboard() {
                                 <Pencil size={12} className="text-app-textSecondary opacity-0 group-hover:opacity-100 transition-opacity" />
                               </div>
                             )}
-                          </td>
-                          <td className="px-5 py-3.5 pr-8">
-                            <ProgressBar stock={item.current_stock} threshold={item.threshold_qty} />
                           </td>
                           <td className="px-5 py-3.5">
                             <StatusPill status={status} />

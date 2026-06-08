@@ -5,6 +5,7 @@ import { isMockMode, mockDb } from '../../utils/mockDb'
 import { useAuth } from '../../context/AuthContext'
 import { useCurrentStock } from '../../hooks/useCurrentStock'
 import { Trash2, Plus } from 'lucide-react'
+import SearchableDropdown from '../ui/SearchableDropdown'
 
 export default function UsageEntryForm({ open, onClose, onSuccess }) {
   const { profile } = useAuth()
@@ -87,6 +88,8 @@ export default function UsageEntryForm({ open, onClose, onSuccess }) {
   // To prevent selecting the same item twice
   const selectedItemIds = items.map(i => i.item_id).filter(Boolean)
 
+  const dropdownItems = stock.map(s => ({ ...s, id: s.item_id, name: s.item_name }))
+
   return (
     <Modal title="Log Daily Usage" open={open} onClose={onClose}>
       <form onSubmit={handleSubmit}>
@@ -140,23 +143,11 @@ export default function UsageEntryForm({ open, onClose, onSuccess }) {
                 <div key={item.id} className={`relative rounded-[8px] border p-3 transition-colors ${hasError ? 'border-app-amber/60 bg-[#fffaf5]' : 'border-app-border bg-gray-50/50'}`}>
                   <div className="flex gap-2 items-start">
                     <div className="flex-1">
-                      <select
-                        required
+                      <SearchableDropdown
+                        items={dropdownItems.filter(s => !selectedItemIds.includes(s.id) || s.id === item.item_id)}
                         value={item.item_id}
-                        onChange={(e) => updateItem(item.id, 'item_id', e.target.value)}
-                        className={`h-[34px] w-full rounded-[6px] border ${hasError ? 'border-app-amber/40' : 'border-app-border'} bg-white px-3 text-[12px] text-app-textPrimary focus:border-app-greenMid focus:outline-none`}
-                      >
-                        <option value="" disabled>Select item</option>
-                        {stock.map(s => (
-                          <option 
-                            key={s.item_id} 
-                            value={s.item_id}
-                            disabled={selectedItemIds.includes(s.item_id) && s.item_id !== item.item_id}
-                          >
-                            {s.item_name}
-                          </option>
-                        ))}
-                      </select>
+                        onChange={(val) => updateItem(item.id, 'item_id', val)}
+                      />
                     </div>
                     
                     <div className="w-[110px]">
