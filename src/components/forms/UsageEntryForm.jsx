@@ -91,7 +91,7 @@ export default function UsageEntryForm({ open, onClose, onSuccess }) {
   const dropdownItems = stock.map(s => ({ ...s, id: s.item_id, name: s.item_name }))
 
   return (
-    <Modal title="Log Daily Usage" open={open} onClose={onClose}>
+    <Modal title="Log Daily Usage" open={open} onClose={onClose} maxWidthClass="max-w-[480px]">
       <form onSubmit={handleSubmit}>
         <div className="space-y-4 max-h-[60vh] overflow-y-auto px-1 -mx-1">
           <div className="flex gap-3">
@@ -150,7 +150,7 @@ export default function UsageEntryForm({ open, onClose, onSuccess }) {
                       />
                     </div>
                     
-                    <div className="w-[120px]">
+                    <div className="w-[150px]">
                       <div className="relative">
                         <input
                           type="number"
@@ -159,8 +159,8 @@ export default function UsageEntryForm({ open, onClose, onSuccess }) {
                           required
                           value={item.quantity}
                           onChange={(e) => updateItem(item.id, 'quantity', e.target.value)}
-                          placeholder={selectedStockItem?.tracking_mode === 'estimated' ? "Approx Qty" : "Qty"}
-                          className={`h-[34px] w-full rounded-[6px] border ${hasError ? 'border-app-amber/40 bg-[#fffcf9]' : 'border-app-border bg-white'} pl-3 pr-9 text-[12px] text-app-textPrimary focus:border-app-greenMid focus:outline-none`}
+                          placeholder={selectedStockItem?.tracking_mode === 'estimated' ? "Approx" : "Qty"}
+                          className={`h-[34px] w-full rounded-[6px] border ${hasError ? 'border-app-amber/40 bg-[#fffcf9]' : 'border-app-border bg-white'} pl-3 pr-[60px] text-[12px] text-app-textPrimary focus:border-app-greenMid focus:outline-none`}
                         />
                         {selectedStockItem && (
                           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-medium text-app-textSecondary">

@@ -109,7 +109,7 @@ export default function StockEntryForm({ open, onClose, onSuccess }) {
 
   return (
     <>
-      <Modal title="Manage Stock Levels" open={open && !showNewItem} onClose={onClose}>
+      <Modal title="Manage Stock Levels" open={open && !showNewItem} onClose={onClose} maxWidthClass="max-w-[480px]">
         <form onSubmit={handleSubmit}>
           <div className="space-y-4">
             
