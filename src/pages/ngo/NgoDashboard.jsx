@@ -3,6 +3,7 @@ import LiveDot from '../../components/ui/LiveDot'
 import StatCard from '../../components/ui/StatCard'
 import AlertStrip from '../../components/ui/AlertStrip'
 import ActivityRow from '../../components/ui/ActivityRow'
+import CategoryChips from '../../components/ui/CategoryChips'
 import ProgressBar from '../../components/ui/ProgressBar'
 import StatusPill from '../../components/ui/StatusPill'
 import { stockStatus, stockBarPct } from '../../utils/stockStatus'
@@ -26,6 +27,7 @@ export default function NgoDashboard() {
   // Filters for Stock Status Tab
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('All')
+  const [categoryFilter, setCategoryFilter] = useState('All')
 
   // Inline Threshold Editing State
   const [editingItemId, setEditingItemId] = useState(null)
@@ -65,9 +67,15 @@ export default function NgoDashboard() {
       else if (statusFilter === 'OK' && status === 'ok') matchesStatus = true
       else if (statusFilter === 'Low' && status === 'low') matchesStatus = true
       else if (statusFilter === 'Critical' && status === 'critical') matchesStatus = true
-      return matchesSearch && matchesStatus
+      
+      let matchesCategory = true
+      if (categoryFilter !== 'All') {
+        matchesCategory = item.category === categoryFilter
+      }
+
+      return matchesSearch && matchesStatus && matchesCategory
     })
-  }, [stock, searchQuery, statusFilter])
+  }, [stock, searchQuery, statusFilter, categoryFilter])
 
   // 3. Aggregate Usage Data for Charts
   const chartData = useMemo(() => {
@@ -260,6 +268,8 @@ export default function NgoDashboard() {
               <option value="Critical">Critical</option>
             </select>
           </div>
+          
+          <CategoryChips selectedCategory={categoryFilter} onSelectCategory={setCategoryFilter} />
 
           <div className="overflow-hidden rounded-[10px] border border-app-border bg-app-surface shadow-sm shadow-black/5">
             <div className="border-b border-app-border px-5 py-4 bg-app-surfaceAlt/50">
@@ -304,15 +314,6 @@ export default function NgoDashboard() {
                                 <span className="font-semibold text-app-textPrimary">{item.name_en} <span className="text-app-textSecondary font-medium">({item.name_ta})</span></span>
                                 <div className="flex items-center gap-2 mt-0.5">
                                   {item.category && <span className="text-[10px] text-app-textSecondary bg-gray-100 px-1.5 py-0.5 rounded">{item.category}</span>}
-                                  {item.tracking_mode && item.tracking_mode !== 'measured' && (
-                                    <span className={`text-[10px] px-1.5 py-0.5 rounded whitespace-nowrap ${
-                                      item.tracking_mode === 'estimated' ? 'bg-blue-50 text-blue-600 border border-blue-100' :
-                                      item.tracking_mode === 'count_only' ? 'bg-purple-50 text-purple-600 border border-purple-100' :
-                                      'bg-orange-50 text-orange-600 border border-orange-100'
-                                    }`}>
-                                      {item.tracking_mode.replace('_', ' ')}
-                                    </span>
-                                  )}
                                 </div>
                               </div>
                             </div>

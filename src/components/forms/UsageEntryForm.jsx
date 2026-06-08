@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useCurrentStock } from '../../hooks/useCurrentStock'
 import { Trash2, Plus } from 'lucide-react'
 import SearchableDropdown from '../ui/SearchableDropdown'
+import CategoryChips from '../ui/CategoryChips'
 
 export default function UsageEntryForm({ open, onClose, onSuccess }) {
   const { profile } = useAuth()
@@ -14,13 +15,13 @@ export default function UsageEntryForm({ open, onClose, onSuccess }) {
   const [date, setDate] = useState(() => new Date().toISOString().split('T')[0])
   const [mealType, setMealType] = useState('Lunch')
   const [notes, setNotes] = useState('')
-  const [items, setItems] = useState([{ id: Date.now(), item_id: '', quantity: '' }])
+  const [items, setItems] = useState([{ id: Date.now(), item_id: '', quantity: '', category_filter: 'All' }])
   
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
 
   function addItemRow() {
-    setItems([...items, { id: Date.now(), item_id: '', quantity: '' }])
+    setItems([...items, { id: Date.now(), item_id: '', quantity: '', category_filter: 'All' }])
   }
 
   function removeItemRow(id) {
@@ -82,7 +83,7 @@ export default function UsageEntryForm({ open, onClose, onSuccess }) {
     setDate(new Date().toISOString().split('T')[0])
     setMealType('Lunch')
     setNotes('')
-    setItems([{ id: Date.now(), item_id: '', quantity: '' }])
+    setItems([{ id: Date.now(), item_id: '', quantity: '', category_filter: 'All' }])
   }
 
   // To prevent selecting the same item twice
@@ -141,10 +142,19 @@ export default function UsageEntryForm({ open, onClose, onSuccess }) {
               
               return (
                 <div key={item.id} className={`relative rounded-[8px] border p-3 transition-colors ${hasError ? 'border-app-amber/60 bg-[#fffaf5]' : 'border-app-border bg-gray-50/50'}`}>
-                  <div className="flex gap-2 items-start">
+                  <CategoryChips 
+                    selectedCategory={item.category_filter} 
+                    onSelectCategory={(val) => updateItem(item.id, 'category_filter', val)} 
+                  />
+                  <div className="flex gap-2 items-start mt-1">
                     <div className="flex-1">
                       <SearchableDropdown
-                        items={dropdownItems.filter(s => (s.tracking_mode === 'measured' || s.tracking_mode === 'estimated' || s.tracking_mode === 'count_only') && (!selectedItemIds.includes(s.id) || s.id === item.item_id))}
+                        items={dropdownItems.filter(s => {
+                          const isTrackable = s.tracking_mode === 'measured' || s.tracking_mode === 'estimated' || s.tracking_mode === 'count_only'
+                          const isAvailable = !selectedItemIds.includes(s.id) || s.id === item.item_id
+                          const matchesCategory = item.category_filter === 'All' || s.category === item.category_filter
+                          return isTrackable && isAvailable && matchesCategory
+                        })}
                         value={item.item_id}
                         onChange={(val) => updateItem(item.id, 'item_id', val)}
                       />

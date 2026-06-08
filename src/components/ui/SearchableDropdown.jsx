@@ -89,15 +89,6 @@ export default function SearchableDropdown({ items, value, onChange, placeholder
                         }`}
                       >
                         <span className="truncate">{displayName}</span>
-                        {item.tracking_mode && item.tracking_mode !== 'measured' && (
-                          <span className={`text-[10px] px-1.5 py-0.5 rounded ml-2 whitespace-nowrap ${
-                            item.tracking_mode === 'estimated' ? 'bg-blue-50 text-blue-600 border border-blue-100' :
-                            item.tracking_mode === 'count_only' ? 'bg-purple-50 text-purple-600 border border-purple-100' :
-                            'bg-orange-50 text-orange-600 border border-orange-100'
-                          }`}>
-                            {item.tracking_mode.replace('_', ' ')}
-                          </span>
-                        )}
                       </div>
                     )
                   })}

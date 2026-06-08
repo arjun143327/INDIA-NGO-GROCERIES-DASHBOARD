@@ -13,12 +13,14 @@ import { stockStatus } from '../../utils/stockStatus'
 import StockEntryForm from '../../components/forms/StockEntryForm'
 import UsageEntryForm from '../../components/forms/UsageEntryForm'
 import { downloadExcel } from '../../utils/exportExcel'
+import CategoryChips from '../../components/ui/CategoryChips'
 
 export default function SchoolDashboard() {
   const [activeModal, setActiveModal] = useState(null)
   const [activeTab, setActiveTab] = useState('Overview')
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('All')
+  const [categoryFilter, setCategoryFilter] = useState('All')
   const [activityTypeFilter, setActivityTypeFilter] = useState('All')
   const [reportRange, setReportRange] = useState('7days')
   
@@ -50,8 +52,13 @@ export default function SchoolDashboard() {
     else if (statusFilter === 'OK' && status === 'ok') matchesStatus = true
     else if (statusFilter === 'Low' && status === 'low') matchesStatus = true
     else if (statusFilter === 'Critical' && status === 'critical') matchesStatus = true
+    
+    let matchesCategory = true
+    if (categoryFilter !== 'All') {
+      matchesCategory = item.category === categoryFilter
+    }
 
-    return matchesSearch && matchesStatus
+    return matchesSearch && matchesStatus && matchesCategory
   })
   
   // Filter logic for activity tab
@@ -251,6 +258,8 @@ export default function SchoolDashboard() {
               <option value="Critical">Critical</option>
             </select>
           </div>
+          
+          <CategoryChips selectedCategory={categoryFilter} onSelectCategory={setCategoryFilter} />
 
          <div className="overflow-hidden rounded-[10px] border border-app-border bg-app-surface shadow-sm shadow-black/5">
         <div className="border-b border-app-border px-5 py-4 flex items-center justify-between">
@@ -298,15 +307,6 @@ export default function SchoolDashboard() {
                       <td className="px-5 py-3.5 font-medium text-app-textPrimary">
                         <div className="flex items-center gap-2">
                           {item.item_name}
-                          {item.tracking_mode && item.tracking_mode !== 'measured' && (
-                            <span className={`text-[10px] px-1.5 py-0.5 rounded whitespace-nowrap ${
-                              item.tracking_mode === 'estimated' ? 'bg-blue-50 text-blue-600 border border-blue-100' :
-                              item.tracking_mode === 'count_only' ? 'bg-purple-50 text-purple-600 border border-purple-100' :
-                              'bg-orange-50 text-orange-600 border border-orange-100'
-                            }`}>
-                              {item.tracking_mode.replace('_', ' ')}
-                            </span>
-                          )}
                         </div>
                       </td>
                       <td className="px-5 py-3.5 text-right font-medium text-app-textPrimary">

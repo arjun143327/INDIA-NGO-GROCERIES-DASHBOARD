@@ -85,3 +85,7 @@
 | 16 | Lemon                | 10 Nos   |
 | 17 | Banana               | 10 Nos   |
 | 18 | Coconut              | 7 Nos    |
+| 19 | Mutton               | 5 kg     |
+| 20 | Chicken              | 10 kg    |
+| 21 | Eggs                 | 300 Nos  |
+| 22 | Keerai (Spinach)     | 19 Nos   |
