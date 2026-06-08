@@ -347,9 +347,6 @@ export default function NgoDashboard() {
                         <tr key={item.item_id} className={`border-b border-app-border last:border-0 transition-colors ${rowBg}`}>
                           <td className="px-5 py-3.5">
                             <div className="flex items-center gap-3">
-                              {item.image_url && (
-                                <img src={item.image_url} alt={item.name_en} className="w-10 h-10 rounded object-cover shadow-sm" />
-                              )}
                               <div className="flex flex-col">
                                 <span className="font-semibold text-app-textPrimary">{item.name_en} <span className="text-app-textSecondary font-medium">({item.name_ta})</span></span>
                                 <div className="flex items-center gap-2 mt-0.5">

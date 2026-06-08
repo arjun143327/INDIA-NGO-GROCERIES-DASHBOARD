@@ -5,12 +5,12 @@ export default function Modal({ title, open, onClose, maxWidthClass = "max-w-[36
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-5"
+      className="fixed inset-0 z-50 flex justify-center bg-black/40 p-5 overflow-y-auto"
       onClick={onClose}
       role="presentation"
     >
       <div
-        className={`w-full ${maxWidthClass} overflow-hidden rounded-[10px] border border-app-border bg-app-surface shadow-lg`}
+        className={`w-full ${maxWidthClass} rounded-[10px] border border-app-border bg-app-surface shadow-lg my-auto h-fit`}
         onClick={(event) => event.stopPropagation()}
         role="dialog"
         aria-modal="true"

@@ -94,7 +94,7 @@ export default function UsageEntryForm({ open, onClose, onSuccess }) {
   return (
     <Modal title="Log Daily Usage" open={open} onClose={onClose} maxWidthClass="max-w-[600px]">
       <form onSubmit={handleSubmit}>
-        <div className="space-y-4 max-h-[60vh] overflow-y-auto px-1 -mx-1">
+        <div className="space-y-4">
           <div className="flex gap-3">
             <div className="flex-1">
               <label htmlFor="usageDate" className="mb-1.5 block text-[11px] font-medium text-app-textSecondary">
@@ -134,7 +134,7 @@ export default function UsageEntryForm({ open, onClose, onSuccess }) {
               Items Consumed
             </label>
             
-            <div className="space-y-2">
+            <div className="space-y-2 px-1 -mx-1">
             {items.map((item, index) => {
               const selectedStockItem = stock.find(s => s.item_id === item.item_id)
               const warning = selectedStockItem && Number(item.quantity) > selectedStockItem.current_stock

@@ -171,7 +171,7 @@ export default function StockEntryForm({ open, onClose, onSuccess }) {
                 </button>
               </div>
               
-              <div className="space-y-2 max-h-[48vh] overflow-y-auto px-1 -mx-1">
+              <div className="space-y-2 px-1 -mx-1">
                 {entryItems.map((item) => {
                   const selectedStockItem = items.find(i => i.id === item.item_id)
                   
