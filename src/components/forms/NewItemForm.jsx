@@ -10,7 +10,6 @@ export default function NewItemForm({ open, onClose, onSuccess }) {
   const [nameEn, setNameEn] = useState('')
   const [nameTa, setNameTa] = useState('')
   const [category, setCategory] = useState('Household / utility')
-  const [trackingMode, setTrackingMode] = useState('measured')
   const [unit, setUnit] = useState('kg')
   const [threshold, setThreshold] = useState('0') // Default to 0
   const [submitting, setSubmitting] = useState(false)
@@ -27,7 +26,6 @@ export default function NewItemForm({ open, onClose, onSuccess }) {
       name_en: nameEn.trim(),
       name_ta: nameTa.trim(),
       category,
-      tracking_mode: trackingMode,
       unit,
       threshold_qty: Number(threshold),
       school_id: profile?.school_id || 'mock-school-1',
@@ -60,7 +58,6 @@ export default function NewItemForm({ open, onClose, onSuccess }) {
     setNameEn('')
     setNameTa('')
     setCategory('Household / utility')
-    setTrackingMode('measured')
     setThreshold('0')
   }
 
@@ -121,19 +118,21 @@ export default function NewItemForm({ open, onClose, onSuccess }) {
               </select>
             </div>
             <div className="flex-1">
-              <label htmlFor="trackingMode" className="mb-1.5 block text-[11px] font-medium text-app-textSecondary">
-                Tracking Mode
+              <label htmlFor="itemUnit" className="mb-1.5 block text-[11px] font-medium text-app-textSecondary">
+                Unit
               </label>
               <select
-                id="trackingMode"
-                value={trackingMode}
-                onChange={(e) => setTrackingMode(e.target.value)}
+                id="itemUnit"
+                required
+                value={unit}
+                onChange={(e) => setUnit(e.target.value)}
                 className="h-[36px] w-full rounded-[6px] border border-app-border bg-white px-3 text-[13px] text-app-textPrimary focus:border-app-greenMid focus:outline-none"
               >
-                <option value="measured">Exact (Measured)</option>
-                <option value="estimated">Rough (Estimated)</option>
-                <option value="count_only">Count Only</option>
-                <option value="reorder_only">Reorder Only</option>
+                <option value="kg">kg</option>
+                <option value="grams">grams</option>
+                <option value="L">L (litre)</option>
+                <option value="packets">packets</option>
+                <option value="nos">nos</option>
               </select>
             </div>
           </div>
@@ -151,13 +150,10 @@ export default function NewItemForm({ open, onClose, onSuccess }) {
                 className="h-[36px] w-full rounded-[6px] border border-app-border bg-white px-3 text-[13px] text-app-textPrimary focus:border-app-greenMid focus:outline-none"
               >
                 <option value="kg">kg</option>
-                <option value="g">g</option>
-                <option value="litres">litres</option>
+                <option value="grams">grams</option>
+                <option value="L">L (litre)</option>
                 <option value="packets">packets</option>
                 <option value="nos">nos</option>
-                <option value="pieces">pieces</option>
-                <option value="boxes">boxes</option>
-                <option value="packs">packs</option>
               </select>
             </div>
             

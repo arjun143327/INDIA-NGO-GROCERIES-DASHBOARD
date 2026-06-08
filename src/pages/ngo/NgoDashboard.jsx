@@ -16,7 +16,7 @@ import { AlertCircle, Calendar, Pencil, Check, X } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { isMockMode, mockDb } from '../../utils/mockDb'
 
-const TABS = ['Overview', 'Master Catalog', 'Usage Trends']
+const TABS = ['Overview', 'Master Catalog', 'Usage Trends', 'Expenditure']
 
 export default function NgoDashboard() {
   const [activeTab, setActiveTab] = useState('Overview')
@@ -99,6 +99,43 @@ export default function NgoDashboard() {
     const itemChart = Object.values(itemUsageMap).sort((a,b) => b.Amount - a.Amount).slice(0, 5)
 
     return { dailyChart, itemChart }
+  }, [filteredEntries])
+
+  // 4. Expenditure Aggregation from stock_entries
+  const expenditureData = useMemo(() => {
+    const stockEntries = filteredEntries.filter(e => e.type === 'stock')
+
+    // Total spend in period
+    const totalSpend = stockEntries.reduce((sum, e) => sum + (Number(e.total_expense) || 0), 0)
+
+    // Spending by item
+    const byItemMap = stockEntries.reduce((acc, e) => {
+      const name = e.item_name || 'Unknown'
+      if (!acc[name]) acc[name] = { name, spend: 0 }
+      acc[name].spend += Number(e.total_expense) || 0
+      return acc
+    }, {})
+    const byItem = Object.values(byItemMap).filter(i => i.spend > 0).sort((a, b) => b.spend - a.spend).slice(0, 8)
+
+    // Spending by category
+    const byCategoryMap = stockEntries.reduce((acc, e) => {
+      const cat = e.category || 'Other'
+      if (!acc[cat]) acc[cat] = { name: cat, spend: 0 }
+      acc[cat].spend += Number(e.total_expense) || 0
+      return acc
+    }, {})
+    const byCategory = Object.values(byCategoryMap).filter(c => c.spend > 0).sort((a, b) => b.spend - a.spend)
+
+    // Spending by date (monthly)
+    const byDateMap = stockEntries.reduce((acc, e) => {
+      const date = (e.entry_date || e.created_at || '').split('T')[0]
+      if (!acc[date]) acc[date] = { date, spend: 0 }
+      acc[date].spend += Number(e.total_expense) || 0
+      return acc
+    }, {})
+    const byDate = Object.values(byDateMap).filter(d => d.spend > 0).sort((a, b) => new Date(a.date) - new Date(b.date))
+
+    return { totalSpend, byItem, byCategory, byDate }
   }, [filteredEntries])
 
   // 4. Inventory Health for Donut Chart
@@ -197,6 +234,9 @@ export default function NgoDashboard() {
             <StatCard label="Entries in Period" value={filteredEntries.length} />
             <StatCard label="Low Stock Items" value={low.length} colour="text-app-amber" />
             <StatCard label="Critical Items" value={critical.length} colour="text-app-red" />
+            {expenditureData.totalSpend > 0 && (
+              <StatCard label="Total Spend (Period)" value={`₹${expenditureData.totalSpend.toLocaleString('en-IN')}`} colour="text-app-greenMid" />
+            )}
           </div>
 
           <div className="grid gap-4 lg:grid-cols-[1fr,1fr]">
@@ -468,6 +508,95 @@ export default function NgoDashboard() {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* --- EXPENDITURE TAB --- */}
+      {activeTab === 'Expenditure' && (
+        <div className="space-y-4 animate-in fade-in duration-300">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-[15px] font-semibold text-app-textPrimary">Expenditure Summary</h2>
+              <p className="text-[12px] text-app-textSecondary mt-0.5">Track spending by item, category, and date from incoming stock entries.</p>
+            </div>
+            {expenditureData.totalSpend > 0 && (
+              <div className="rounded-lg bg-app-greenLight border border-app-greenMid/20 px-4 py-2 text-right">
+                <div className="text-[10px] text-app-greenMid uppercase tracking-wide font-semibold">Total Spend</div>
+                <div className="text-[20px] font-bold text-app-greenDark">₹{expenditureData.totalSpend.toLocaleString('en-IN')}</div>
+              </div>
+            )}
+          </div>
+
+          {expenditureData.totalSpend === 0 ? (
+            <div className="rounded-[10px] border border-app-border bg-app-surface p-12 text-center">
+              <p className="text-[14px] font-medium text-app-textPrimary">No expenditure recorded yet</p>
+              <p className="text-[12px] text-app-textSecondary mt-1">Add expense amounts when recording incoming stock to track spending here.</p>
+            </div>
+          ) : (
+            <div className="grid gap-4 lg:grid-cols-2">
+              {expenditureData.byItem.length > 0 && (
+                <div className="overflow-hidden rounded-[10px] border border-app-border bg-app-surface shadow-sm">
+                  <div className="border-b border-app-border px-5 py-4 bg-app-surfaceAlt/50">
+                    <h3 className="text-[13px] font-semibold text-app-textPrimary">Spending by Item</h3>
+                  </div>
+                  <div className="p-4">
+                    <ResponsiveContainer width="100%" height={240}>
+                      <BarChart data={expenditureData.byItem} layout="vertical" margin={{ left: 80, right: 20 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                        <XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={(v) => `₹${v.toLocaleString('en-IN')}`} />
+                        <YAxis type="category" dataKey="name" tick={{ fontSize: 10 }} width={80} />
+                        <Tooltip formatter={(v) => [`₹${Number(v).toLocaleString('en-IN')}`, 'Spend']} contentStyle={{ borderRadius: '8px', fontSize: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                        <Bar dataKey="spend" fill="#1a6b3c" radius={[0, 4, 4, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              )}
+
+              {expenditureData.byCategory.length > 0 && (
+                <div className="overflow-hidden rounded-[10px] border border-app-border bg-app-surface shadow-sm">
+                  <div className="border-b border-app-border px-5 py-4 bg-app-surfaceAlt/50">
+                    <h3 className="text-[13px] font-semibold text-app-textPrimary">Spending by Category</h3>
+                  </div>
+                  <div className="p-4 space-y-2">
+                    {expenditureData.byCategory.map((cat) => {
+                      const pct = Math.round((cat.spend / expenditureData.totalSpend) * 100)
+                      return (
+                        <div key={cat.name}>
+                          <div className="flex justify-between text-[12px] mb-1">
+                            <span className="font-medium text-app-textPrimary">{cat.name}</span>
+                            <span className="text-app-textSecondary">₹{cat.spend.toLocaleString('en-IN')} <span className="text-[10px]">({pct}%)</span></span>
+                          </div>
+                          <div className="h-1.5 rounded-full bg-gray-100 overflow-hidden">
+                            <div className="h-full rounded-full bg-app-greenMid" style={{ width: `${pct}%` }} />
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {expenditureData.byDate.length > 1 && (
+                <div className="overflow-hidden rounded-[10px] border border-app-border bg-app-surface shadow-sm lg:col-span-2">
+                  <div className="border-b border-app-border px-5 py-4 bg-app-surfaceAlt/50">
+                    <h3 className="text-[13px] font-semibold text-app-textPrimary">Spending Over Time</h3>
+                  </div>
+                  <div className="p-4">
+                    <ResponsiveContainer width="100%" height={200}>
+                      <LineChart data={expenditureData.byDate}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                        <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+                        <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `₹${v}`} />
+                        <Tooltip formatter={(v) => [`₹${Number(v).toLocaleString('en-IN')}`, 'Spend']} contentStyle={{ borderRadius: '8px', fontSize: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                        <Line type="monotone" dataKey="spend" stroke="#1a6b3c" strokeWidth={2} dot={{ r: 4, fill: '#1a6b3c' }} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>

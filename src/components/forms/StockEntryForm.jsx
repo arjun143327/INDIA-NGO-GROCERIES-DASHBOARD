@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import Modal from '../ui/Modal'
 import { supabase } from '../../lib/supabase'
 import { isMockMode, mockDb } from '../../utils/mockDb'
@@ -16,7 +16,7 @@ export default function StockEntryForm({ open, onClose, onSuccess }) {
   const { stock } = useCurrentStock()
   
   const [entryMode, setEntryMode] = useState('incoming') // 'incoming' or 'adjustment'
-  const [entryItems, setEntryItems] = useState([{ id: Date.now(), item_id: '', quantity: '', category_filter: 'All' }])
+  const [entryItems, setEntryItems] = useState([{ id: Date.now(), item_id: '', quantity: '', expense: '', category_filter: 'All' }])
   const [date, setDate] = useState(() => new Date().toISOString().split('T')[0])
   const [notes, setNotes] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -29,7 +29,6 @@ export default function StockEntryForm({ open, onClose, onSuccess }) {
   async function handleSubmit(e) {
     e.preventDefault()
     
-    // Filter out incomplete rows
     const validItems = entryItems.filter(i => i.item_id && i.quantity && Number(i.quantity) > 0)
     if (validItems.length === 0 || !date) return
 
@@ -39,6 +38,7 @@ export default function StockEntryForm({ open, onClose, onSuccess }) {
     try {
       for (const item of validItems) {
         const qty = Number(item.quantity)
+        const expense = Number(item.expense) || 0
         
         if (entryMode === 'adjustment') {
           const currentStockItem = stock.find(s => s.item_id === item.item_id)
@@ -46,25 +46,24 @@ export default function StockEntryForm({ open, onClose, onSuccess }) {
           const diff = qty - currentQty
 
           if (diff > 0) {
-            // Need to add stock
             const entry = {
               school_id: profile?.school_id || 'mock-school-1',
               item_id: item.item_id,
               qty_added: diff,
               entry_date: date,
+              total_expense: 0,
               notes: `Manual Adjustment: ${notes}`,
               created_by: profile?.id || 'mock-user'
             }
             if (isMockMode()) mockDb.saveStockEntry(entry)
             else await supabase.from('stock_entries').insert(entry)
           } else if (diff < 0) {
-            // Need to remove stock (log usage)
             const usageLog = {
               school_id: profile?.school_id || 'mock-school-1',
               item_id: item.item_id,
               qty_used: Math.abs(diff),
               used_on: date,
-              meal_type: 'Lunch', // Or just 'Adjustment' if we had it
+              meal_type: 'Adjustment',
               notes: `Manual Adjustment: ${notes}`,
               created_by: profile?.id || 'mock-user'
             }
@@ -72,12 +71,13 @@ export default function StockEntryForm({ open, onClose, onSuccess }) {
             else await supabase.from('usage_logs').insert(usageLog)
           }
         } else {
-          // Standard incoming stock
+          // Standard incoming stock with expense
           const entry = {
             school_id: profile?.school_id || 'mock-school-1',
             item_id: item.item_id,
             qty_added: qty,
             entry_date: date,
+            total_expense: expense,
             notes,
             created_by: profile?.id || 'mock-user'
           }
@@ -102,7 +102,7 @@ export default function StockEntryForm({ open, onClose, onSuccess }) {
   }
 
   function addItemRow() {
-    setEntryItems(prev => [...prev, { id: Date.now(), item_id: '', quantity: '', category_filter: 'All' }])
+    setEntryItems(prev => [...prev, { id: Date.now(), item_id: '', quantity: '', expense: '', category_filter: 'All' }])
   }
 
   function removeItemRow(id) {
@@ -111,7 +111,7 @@ export default function StockEntryForm({ open, onClose, onSuccess }) {
 
   function resetForm() {
     setEntryMode('incoming')
-    setEntryItems([{ id: Date.now(), item_id: '', quantity: '', category_filter: 'All' }])
+    setEntryItems([{ id: Date.now(), item_id: '', quantity: '', expense: '', category_filter: 'All' }])
     setDate(new Date().toISOString().split('T')[0])
     setNotes('')
   }
@@ -121,9 +121,12 @@ export default function StockEntryForm({ open, onClose, onSuccess }) {
     refetch()
   }
 
+  // Calculate total expense across all rows
+  const totalExpense = entryItems.reduce((sum, i) => sum + (Number(i.expense) || 0), 0)
+
   return (
     <>
-      <Modal title="Manage Stock Levels" open={open && !showNewItem} onClose={onClose} maxWidthClass="max-w-[480px]">
+      <Modal title="Manage Stock Levels" open={open && !showNewItem} onClose={onClose} maxWidthClass="max-w-[640px]">
         <form onSubmit={handleSubmit}>
           <div className="space-y-4">
             
@@ -145,11 +148,20 @@ export default function StockEntryForm({ open, onClose, onSuccess }) {
               </button>
             </div>
 
+            {/* Column Headers */}
+            <div className="flex gap-2 px-1">
+              <div className="flex-1 text-[10px] font-semibold uppercase tracking-wide text-app-textSecondary">Item</div>
+              <div className="w-[110px] text-[10px] font-semibold uppercase tracking-wide text-app-textSecondary">
+                {entryMode === 'adjustment' ? 'Actual Qty' : 'Qty'}
+              </div>
+              {entryMode === 'incoming' && (
+                <div className="w-[110px] text-[10px] font-semibold uppercase tracking-wide text-app-textSecondary">Expense (₹)</div>
+              )}
+              <div className="w-7" /> {/* spacer for trash button */}
+            </div>
+
             <div>
               <div className="mb-1.5 flex justify-between items-center">
-                <label className="block text-[11px] font-medium text-app-textSecondary">
-                  Grocery Items
-                </label>
                 <button 
                   type="button" 
                   onClick={() => setShowNewItem(true)}
@@ -159,8 +171,8 @@ export default function StockEntryForm({ open, onClose, onSuccess }) {
                 </button>
               </div>
               
-              <div className="space-y-2 max-h-[40vh] overflow-y-auto px-1 -mx-1">
-                {entryItems.map((item, index) => {
+              <div className="space-y-2 max-h-[48vh] overflow-y-auto px-1 -mx-1">
+                {entryItems.map((item) => {
                   const selectedStockItem = items.find(i => i.id === item.item_id)
                   
                   return (
@@ -169,7 +181,7 @@ export default function StockEntryForm({ open, onClose, onSuccess }) {
                         selectedCategory={item.category_filter} 
                         onSelectCategory={(val) => updateItem(item.id, 'category_filter', val)} 
                       />
-                      <div className="flex gap-2 items-start mt-1">
+                      <div className="flex gap-2 items-center mt-2">
                         <div className="flex-1">
                           <SearchableDropdown
                             items={items.filter(s => {
@@ -182,34 +194,53 @@ export default function StockEntryForm({ open, onClose, onSuccess }) {
                           />
                         </div>
                         
-                        <div className="w-[150px]">
+                        {/* Qty */}
+                        <div className="w-[110px]">
                           <div className="relative">
                             <input
                               type="number"
                               min="0"
-                              step={selectedStockItem?.tracking_mode === 'count_only' ? "1" : "0.01"}
+                              step="0.01"
                               required
                               value={item.quantity}
                               onChange={(e) => updateItem(item.id, 'quantity', e.target.value)}
-                              placeholder={entryMode === 'adjustment' ? "Actual count" : "Qty"}
-                              className="h-[34px] w-full rounded-[6px] border border-app-border bg-white pl-3 pr-[60px] text-[12px] text-app-textPrimary focus:border-app-greenMid focus:outline-none"
+                              placeholder={entryMode === 'adjustment' ? 'Count' : 'Qty'}
+                              className="h-[34px] w-full rounded-[6px] border border-app-border bg-white pl-3 pr-[40px] text-[12px] text-app-textPrimary focus:border-app-greenMid focus:outline-none"
                             />
                             {selectedStockItem && (
-                              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-medium text-app-textSecondary">
+                              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-app-textSecondary">
                                 {selectedStockItem.unit}
                               </span>
                             )}
                           </div>
                         </div>
 
+                        {/* Expense — only on incoming mode */}
+                        {entryMode === 'incoming' && (
+                          <div className="w-[110px]">
+                            <div className="relative">
+                              <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[11px] text-app-textSecondary">₹</span>
+                              <input
+                                type="number"
+                                min="0"
+                                step="1"
+                                value={item.expense}
+                                onChange={(e) => updateItem(item.id, 'expense', e.target.value)}
+                                placeholder="0"
+                                className="h-[34px] w-full rounded-[6px] border border-app-border bg-white pl-6 pr-2 text-[12px] text-app-textPrimary focus:border-app-greenMid focus:outline-none"
+                              />
+                            </div>
+                          </div>
+                        )}
+
                         {entryItems.length > 1 && (
                           <button
                             type="button"
                             onClick={() => removeItemRow(item.id)}
-                            className="mt-1 flex h-7 w-7 items-center justify-center rounded text-app-textSecondary hover:bg-app-redBg hover:text-app-red transition-colors"
+                            className="flex h-7 w-7 items-center justify-center rounded text-app-textSecondary hover:bg-app-redBg hover:text-app-red transition-colors flex-shrink-0"
                             aria-label="Remove item"
                           >
-                            <Trash2 size={16} />
+                            <Trash2 size={15} />
                           </button>
                         )}
                       </div>
@@ -228,7 +259,7 @@ export default function StockEntryForm({ open, onClose, onSuccess }) {
               </button>
             </div>
 
-            <div className="flex gap-4 pt-2">
+            <div className="flex gap-4 pt-1">
               <div className="flex-1">
                 <label htmlFor="stockDate" className="mb-1.5 block text-[11px] font-medium text-app-textSecondary uppercase tracking-wide">
                   Date
@@ -243,6 +274,14 @@ export default function StockEntryForm({ open, onClose, onSuccess }) {
                   className="h-[36px] w-full rounded-[6px] border border-app-border bg-white px-3 text-[13px] text-app-textPrimary focus:border-app-greenMid focus:outline-none"
                 />
               </div>
+              {entryMode === 'incoming' && totalExpense > 0 && (
+                <div className="flex-1 flex items-end">
+                  <div className="w-full rounded-[6px] bg-app-greenLight border border-app-greenMid/20 px-3 py-2 text-right">
+                    <div className="text-[10px] text-app-greenMid uppercase tracking-wide font-semibold">Total Expense</div>
+                    <div className="text-[16px] font-bold text-app-greenDark">₹{totalExpense.toLocaleString('en-IN')}</div>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div>
@@ -266,14 +305,14 @@ export default function StockEntryForm({ open, onClose, onSuccess }) {
             <button
               type="button"
               onClick={onClose}
-              className="h-[32px] rounded-lg border border-app-border bg-white px-4 text-[12px] font-semibold text-app-textPrimary hover:bg-app-surfaceAlt"
+              className="h-[36px] rounded-lg border border-app-border bg-white px-5 text-[13px] font-semibold text-app-textPrimary hover:bg-app-surfaceAlt"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="h-[32px] rounded-lg bg-app-greenMid px-4 text-[12px] font-semibold text-white hover:opacity-90 disabled:opacity-50"
+              className="h-[36px] rounded-lg bg-app-greenMid px-5 text-[13px] font-semibold text-white hover:opacity-90 disabled:opacity-50"
             >
               {submitting ? 'Saving...' : 'Save Stock'}
             </button>

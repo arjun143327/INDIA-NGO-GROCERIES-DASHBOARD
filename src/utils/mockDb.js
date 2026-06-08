@@ -45,7 +45,7 @@ export function isMockMode() {
 }
 
 export const mockDb = {
-  getItems: () => getStorageItem('mock_inventory_items_v10', INITIAL_ITEMS),
+  getItems: () => getStorageItem('mock_inventory_items_v11', INITIAL_ITEMS),
   
   saveItem: (item) => {
     const items = mockDb.getItems()
@@ -56,17 +56,17 @@ export const mockDb = {
       created_at: new Date().toISOString(),
       ...item,
     }
-    setStorageItem('mock_inventory_items_v10', [...items, newItem])
+    setStorageItem('mock_inventory_items_v11', [...items, newItem])
     return newItem
   },
 
   updateItem: (id, updates) => {
     const items = mockDb.getItems()
     const updated = items.map(item => item.id === id ? { ...item, ...updates } : item)
-    setStorageItem('mock_inventory_items_v10', updated)
+    setStorageItem('mock_inventory_items_v11', updated)
   },
 
-  getStockEntries: () => getStorageItem('mock_stock_entries_v10', INITIAL_STOCK),
+  getStockEntries: () => getStorageItem('mock_stock_entries_v11', INITIAL_STOCK),
 
   saveStockEntry: (entry) => {
     const entries = mockDb.getStockEntries()
@@ -76,11 +76,11 @@ export const mockDb = {
       created_at: new Date().toISOString(),
       ...entry,
     }
-    setStorageItem('mock_stock_entries_v10', [newEntry, ...entries])
+    setStorageItem('mock_stock_entries_v11', [newEntry, ...entries])
     return newEntry
   },
 
-  getUsageLogs: () => getStorageItem('mock_usage_logs_v10', INITIAL_USAGE),
+  getUsageLogs: () => getStorageItem('mock_usage_logs_v11', INITIAL_USAGE),
 
   saveUsageLog: (log) => {
     const logs = mockDb.getUsageLogs()
@@ -90,7 +90,7 @@ export const mockDb = {
       created_at: new Date().toISOString(),
       ...log,
     }
-    setStorageItem('mock_usage_logs_v10', [newLog, ...logs])
+    setStorageItem('mock_usage_logs_v11', [newLog, ...logs])
     return newLog
   },
 
