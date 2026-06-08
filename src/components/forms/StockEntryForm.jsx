@@ -15,7 +15,6 @@ export default function StockEntryForm({ open, onClose, onSuccess }) {
   const { items, refetch } = useInventoryItems()
   const { stock } = useCurrentStock()
   
-  const [entryMode, setEntryMode] = useState('incoming') // 'incoming' or 'adjustment'
   const [entryItems, setEntryItems] = useState([{ id: Date.now(), item_id: '', quantity: '', expense: '', category_filter: 'All' }])
   const [date, setDate] = useState(() => new Date().toISOString().split('T')[0])
   const [notes, setNotes] = useState('')
@@ -40,50 +39,18 @@ export default function StockEntryForm({ open, onClose, onSuccess }) {
         const qty = Number(item.quantity)
         const expense = Number(item.expense) || 0
         
-        if (entryMode === 'adjustment') {
-          const currentStockItem = stock.find(s => s.item_id === item.item_id)
-          const currentQty = currentStockItem ? currentStockItem.current_stock : 0
-          const diff = qty - currentQty
-
-          if (diff > 0) {
-            const entry = {
-              school_id: profile?.school_id || 'mock-school-1',
-              item_id: item.item_id,
-              qty_added: diff,
-              entry_date: date,
-              total_expense: 0,
-              notes: `Manual Adjustment: ${notes}`,
-              created_by: profile?.id || 'mock-user'
-            }
-            if (isMockMode()) mockDb.saveStockEntry(entry)
-            else await supabase.from('stock_entries').insert(entry)
-          } else if (diff < 0) {
-            const usageLog = {
-              school_id: profile?.school_id || 'mock-school-1',
-              item_id: item.item_id,
-              qty_used: Math.abs(diff),
-              used_on: date,
-              meal_type: 'Adjustment',
-              notes: `Manual Adjustment: ${notes}`,
-              created_by: profile?.id || 'mock-user'
-            }
-            if (isMockMode()) mockDb.saveUsageLog(usageLog)
-            else await supabase.from('usage_logs').insert(usageLog)
-          }
-        } else {
-          // Standard incoming stock with expense
-          const entry = {
-            school_id: profile?.school_id || 'mock-school-1',
-            item_id: item.item_id,
-            qty_added: qty,
-            entry_date: date,
-            total_expense: expense,
-            notes,
-            created_by: profile?.id || 'mock-user'
-          }
-          if (isMockMode()) mockDb.saveStockEntry(entry)
-          else await supabase.from('stock_entries').insert(entry)
+        // Standard incoming stock with expense
+        const entry = {
+          school_id: profile?.school_id || 'mock-school-1',
+          item_id: item.item_id,
+          qty_added: qty,
+          entry_date: date,
+          total_expense: expense,
+          notes,
+          created_by: profile?.id || 'mock-user'
         }
+        if (isMockMode()) mockDb.saveStockEntry(entry)
+        else await supabase.from('stock_entries').insert(entry)
       }
 
       setSubmitting(false)
@@ -110,7 +77,6 @@ export default function StockEntryForm({ open, onClose, onSuccess }) {
   }
 
   function resetForm() {
-    setEntryMode('incoming')
     setEntryItems([{ id: Date.now(), item_id: '', quantity: '', expense: '', category_filter: 'All' }])
     setDate(new Date().toISOString().split('T')[0])
     setNotes('')
@@ -130,33 +96,11 @@ export default function StockEntryForm({ open, onClose, onSuccess }) {
         <form onSubmit={handleSubmit}>
           <div className="space-y-4">
             
-            {/* Toggle Mode */}
-            <div className="flex bg-gray-100 p-1 rounded-lg">
-              <button
-                type="button"
-                onClick={() => setEntryMode('incoming')}
-                className={`flex-1 text-[12px] font-medium py-1.5 rounded-md transition-colors ${entryMode === 'incoming' ? 'bg-white text-app-greenMid shadow-sm' : 'text-app-textSecondary hover:text-app-textPrimary'}`}
-              >
-                Add Incoming Stock
-              </button>
-              <button
-                type="button"
-                onClick={() => setEntryMode('adjustment')}
-                className={`flex-1 text-[12px] font-medium py-1.5 rounded-md transition-colors ${entryMode === 'adjustment' ? 'bg-white text-app-greenMid shadow-sm' : 'text-app-textSecondary hover:text-app-textPrimary'}`}
-              >
-                Manual Audit / Set Exact
-              </button>
-            </div>
-
             {/* Column Headers */}
             <div className="flex gap-2 px-1">
               <div className="flex-1 text-[10px] font-semibold uppercase tracking-wide text-app-textSecondary">Item</div>
-              <div className="w-[110px] text-[10px] font-semibold uppercase tracking-wide text-app-textSecondary">
-                {entryMode === 'adjustment' ? 'Actual Qty' : 'Qty'}
-              </div>
-              {entryMode === 'incoming' && (
-                <div className="w-[110px] text-[10px] font-semibold uppercase tracking-wide text-app-textSecondary">Expense (₹)</div>
-              )}
+              <div className="w-[110px] text-[10px] font-semibold uppercase tracking-wide text-app-textSecondary">Qty</div>
+              <div className="w-[110px] text-[10px] font-semibold uppercase tracking-wide text-app-textSecondary">Expense (₹)</div>
               <div className="w-7" /> {/* spacer for trash button */}
             </div>
 
@@ -204,7 +148,7 @@ export default function StockEntryForm({ open, onClose, onSuccess }) {
                               required
                               value={item.quantity}
                               onChange={(e) => updateItem(item.id, 'quantity', e.target.value)}
-                              placeholder={entryMode === 'adjustment' ? 'Count' : 'Qty'}
+                              placeholder="Qty"
                               className="h-[34px] w-full rounded-[6px] border border-app-border bg-white pl-3 pr-[40px] text-[12px] text-app-textPrimary focus:border-app-greenMid focus:outline-none"
                             />
                             {selectedStockItem && (
@@ -215,23 +159,21 @@ export default function StockEntryForm({ open, onClose, onSuccess }) {
                           </div>
                         </div>
 
-                        {/* Expense — only on incoming mode */}
-                        {entryMode === 'incoming' && (
-                          <div className="w-[110px]">
-                            <div className="relative">
-                              <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[11px] text-app-textSecondary">₹</span>
-                              <input
-                                type="number"
-                                min="0"
-                                step="1"
-                                value={item.expense}
-                                onChange={(e) => updateItem(item.id, 'expense', e.target.value)}
-                                placeholder="0"
-                                className="h-[34px] w-full rounded-[6px] border border-app-border bg-white pl-6 pr-2 text-[12px] text-app-textPrimary focus:border-app-greenMid focus:outline-none"
-                              />
-                            </div>
+                        {/* Expense */}
+                        <div className="w-[110px]">
+                          <div className="relative">
+                            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[11px] text-app-textSecondary">₹</span>
+                            <input
+                              type="number"
+                              min="0"
+                              step="1"
+                              value={item.expense}
+                              onChange={(e) => updateItem(item.id, 'expense', e.target.value)}
+                              placeholder="0"
+                              className="h-[34px] w-full rounded-[6px] border border-app-border bg-white pl-6 pr-2 text-[12px] text-app-textPrimary focus:border-app-greenMid focus:outline-none"
+                            />
                           </div>
-                        )}
+                        </div>
 
                         {entryItems.length > 1 && (
                           <button
@@ -274,7 +216,7 @@ export default function StockEntryForm({ open, onClose, onSuccess }) {
                   className="h-[36px] w-full rounded-[6px] border border-app-border bg-white px-3 text-[13px] text-app-textPrimary focus:border-app-greenMid focus:outline-none"
                 />
               </div>
-              {entryMode === 'incoming' && totalExpense > 0 && (
+              {totalExpense > 0 && (
                 <div className="flex-1 flex items-end">
                   <div className="w-full rounded-[6px] bg-app-greenLight border border-app-greenMid/20 px-3 py-2 text-right">
                     <div className="text-[10px] text-app-greenMid uppercase tracking-wide font-semibold">Total Expense</div>
