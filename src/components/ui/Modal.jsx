@@ -1,4 +1,4 @@
-export default function Modal({ title, open, onClose, children }) {
+export default function Modal({ title, open, onClose, maxWidthClass = "max-w-[360px]", children }) {
   if (!open) {
     return null
   }
@@ -10,7 +10,7 @@ export default function Modal({ title, open, onClose, children }) {
       role="presentation"
     >
       <div
-        className="w-full max-w-[360px] overflow-hidden rounded-[10px] border border-app-border bg-app-surface"
+        className={`w-full ${maxWidthClass} overflow-hidden rounded-[10px] border border-app-border bg-app-surface shadow-lg`}
         onClick={(event) => event.stopPropagation()}
         role="dialog"
         aria-modal="true"

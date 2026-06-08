@@ -144,54 +144,30 @@ export default function UsageEntryForm({ open, onClose, onSuccess }) {
                   <div className="flex gap-2 items-start">
                     <div className="flex-1">
                       <SearchableDropdown
-                        items={dropdownItems.filter(s => (s.tracking_mode === 'measured' || s.tracking_mode === 'estimated') && (!selectedItemIds.includes(s.id) || s.id === item.item_id))}
+                        items={dropdownItems.filter(s => (s.tracking_mode === 'measured' || s.tracking_mode === 'estimated' || s.tracking_mode === 'count_only') && (!selectedItemIds.includes(s.id) || s.id === item.item_id))}
                         value={item.item_id}
                         onChange={(val) => updateItem(item.id, 'item_id', val)}
                       />
                     </div>
                     
-                    <div className="w-[180px] flex flex-col gap-1.5">
-                      {selectedStockItem?.tracking_mode === 'estimated' ? (
-                        <div className="flex gap-1 h-[34px]">
-                          <button type="button" onClick={() => updateItem(item.id, 'quantity', '0.05')} className="flex-1 text-[10px] bg-blue-50 text-blue-600 rounded border border-blue-100 hover:bg-blue-100 transition-colors">Little</button>
-                          <button type="button" onClick={() => updateItem(item.id, 'quantity', '0.2')} className="flex-1 text-[10px] bg-blue-50 text-blue-600 rounded border border-blue-100 hover:bg-blue-100 transition-colors">Mod</button>
-                          <button type="button" onClick={() => updateItem(item.id, 'quantity', '0.5')} className="flex-1 text-[10px] bg-blue-50 text-blue-600 rounded border border-blue-100 hover:bg-blue-100 transition-colors">Lot</button>
-                        </div>
-                      ) : (
-                        <div className="relative">
-                          <input
-                            type="number"
-                            min="0"
-                            step="0.1"
-                            required
-                            value={item.quantity}
-                            onChange={(e) => updateItem(item.id, 'quantity', e.target.value)}
-                            placeholder="Qty"
-                            className={`h-[34px] w-full rounded-[6px] border ${hasError ? 'border-app-amber/40 bg-[#fffcf9]' : 'border-app-border bg-white'} pl-3 pr-9 text-[12px] text-app-textPrimary focus:border-app-greenMid focus:outline-none`}
-                          />
-                          {selectedStockItem && (
-                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-medium text-app-textSecondary">
-                              {selectedStockItem.unit}
-                            </span>
-                          )}
-                        </div>
-                      )}
-                      
-                      {selectedStockItem?.tracking_mode === 'estimated' && (
-                        <div className="flex items-center gap-2">
-                           <input
-                            type="number"
-                            min="0"
-                            step="0.1"
-                            required
-                            value={item.quantity}
-                            onChange={(e) => updateItem(item.id, 'quantity', e.target.value)}
-                            placeholder="Exact"
-                            className={`h-[24px] flex-1 rounded border border-app-border bg-white px-2 text-[10px] text-app-textPrimary focus:border-app-greenMid focus:outline-none`}
-                          />
-                          <span className="text-[10px] text-app-textSecondary">{selectedStockItem.unit}</span>
-                        </div>
-                      )}
+                    <div className="w-[120px]">
+                      <div className="relative">
+                        <input
+                          type="number"
+                          min="0"
+                          step={selectedStockItem?.tracking_mode === 'count_only' ? "1" : "0.01"}
+                          required
+                          value={item.quantity}
+                          onChange={(e) => updateItem(item.id, 'quantity', e.target.value)}
+                          placeholder={selectedStockItem?.tracking_mode === 'estimated' ? "Approx Qty" : "Qty"}
+                          className={`h-[34px] w-full rounded-[6px] border ${hasError ? 'border-app-amber/40 bg-[#fffcf9]' : 'border-app-border bg-white'} pl-3 pr-9 text-[12px] text-app-textPrimary focus:border-app-greenMid focus:outline-none`}
+                        />
+                        {selectedStockItem && (
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-medium text-app-textSecondary">
+                            {selectedStockItem.unit}
+                          </span>
+                        )}
+                      </div>
                     </div>
 
                     {items.length > 1 && (
