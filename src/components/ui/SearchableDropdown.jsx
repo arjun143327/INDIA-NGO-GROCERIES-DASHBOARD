@@ -57,30 +57,52 @@ export default function SearchableDropdown({ items, value, onChange, placeholder
               className="w-full text-[13px] text-app-textPrimary focus:outline-none placeholder:text-app-textSecondary"
             />
           </div>
-          <div className="max-h-[200px] overflow-y-auto py-1">
+          <div className="max-h-[240px] overflow-y-auto py-1">
             {filteredItems.length === 0 ? (
               <div className="px-3 py-2 text-[12px] text-app-textSecondary">No items found</div>
             ) : (
-              filteredItems.map((item) => {
-                const isSelected = item.id === value
-                const displayName = item.name_en ? `${item.name_en} (${item.name_ta})` : item.name
-                return (
-                  <div
-                    key={item.id}
-                    onClick={() => {
-                      onChange(item.id)
-                      setIsOpen(false)
-                      setQuery('')
-                    }}
-                    className={`flex items-center justify-between cursor-pointer px-3 py-2 text-[13px] transition-colors ${
-                      isSelected ? 'bg-app-greenLight text-app-greenMid font-medium' : 'hover:bg-[#fafaf9] text-app-textPrimary'
-                    }`}
-                  >
-                    <span className="truncate">{displayName}</span>
-                    {item.category && <span className="text-[10px] text-app-textSecondary bg-app-surface border border-app-border px-1.5 py-0.5 rounded ml-2 whitespace-nowrap">{item.category}</span>}
+              Object.entries(
+                filteredItems.reduce((acc, item) => {
+                  const cat = item.category || 'Other'
+                  if (!acc[cat]) acc[cat] = []
+                  acc[cat].push(item)
+                  return acc
+                }, {})
+              ).map(([category, catItems]) => (
+                <div key={category}>
+                  <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-app-textSecondary bg-gray-50/80 sticky top-0 backdrop-blur-sm">
+                    {category}
                   </div>
-                )
-              })
+                  {catItems.map((item) => {
+                    const isSelected = item.id === value
+                    const displayName = item.name_en ? `${item.name_en} (${item.name_ta})` : item.name
+                    return (
+                      <div
+                        key={item.id}
+                        onClick={() => {
+                          onChange(item.id)
+                          setIsOpen(false)
+                          setQuery('')
+                        }}
+                        className={`flex items-center justify-between cursor-pointer px-3 py-2 text-[13px] transition-colors ${
+                          isSelected ? 'bg-app-greenLight text-app-greenMid font-medium' : 'hover:bg-[#fafaf9] text-app-textPrimary'
+                        }`}
+                      >
+                        <span className="truncate">{displayName}</span>
+                        {item.tracking_mode && item.tracking_mode !== 'measured' && (
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded ml-2 whitespace-nowrap ${
+                            item.tracking_mode === 'estimated' ? 'bg-blue-50 text-blue-600 border border-blue-100' :
+                            item.tracking_mode === 'count_only' ? 'bg-purple-50 text-purple-600 border border-purple-100' :
+                            'bg-orange-50 text-orange-600 border border-orange-100'
+                          }`}>
+                            {item.tracking_mode.replace('_', ' ')}
+                          </span>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              ))
             )}
           </div>
         </div>

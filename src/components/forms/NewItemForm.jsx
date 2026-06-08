@@ -7,21 +7,27 @@ import { useAuth } from '../../context/AuthContext'
 export default function NewItemForm({ open, onClose, onSuccess }) {
   const { profile } = useAuth()
   const isSchoolStaff = profile?.role === 'school_staff'
-  const [name, setName] = useState('')
+  const [nameEn, setNameEn] = useState('')
+  const [nameTa, setNameTa] = useState('')
+  const [category, setCategory] = useState('Household / utility')
+  const [trackingMode, setTrackingMode] = useState('measured')
   const [unit, setUnit] = useState('kg')
-  const [threshold, setThreshold] = useState('10') // Default to 10
+  const [threshold, setThreshold] = useState('0') // Default to 0
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
 
   async function handleSubmit(e) {
     e.preventDefault()
-    if (!name.trim() || !threshold) return
+    if (!nameEn.trim() || !nameTa.trim() || !threshold) return
 
     setSubmitting(true)
     setError('')
 
     const newItem = {
-      name: name.trim(),
+      name_en: nameEn.trim(),
+      name_ta: nameTa.trim(),
+      category,
+      tracking_mode: trackingMode,
       unit,
       threshold_qty: Number(threshold),
       school_id: profile?.school_id || 'mock-school-1',
@@ -33,8 +39,7 @@ export default function NewItemForm({ open, onClose, onSuccess }) {
         setTimeout(() => {
           mockDb.saveItem(newItem)
           setSubmitting(false)
-          setName('')
-          setThreshold('10')
+          reset()
           onSuccess()
         }, 300)
       } else {
@@ -42,8 +47,7 @@ export default function NewItemForm({ open, onClose, onSuccess }) {
         if (insertError) throw insertError
 
         setSubmitting(false)
-        setName('')
-        setThreshold('10')
+        reset()
         onSuccess()
       }
     } catch (err) {
@@ -52,23 +56,86 @@ export default function NewItemForm({ open, onClose, onSuccess }) {
     }
   }
 
+  function reset() {
+    setNameEn('')
+    setNameTa('')
+    setCategory('Household / utility')
+    setTrackingMode('measured')
+    setThreshold('0')
+  }
+
   return (
     <Modal title="Add New Grocery Item" open={open} onClose={onClose}>
       <form onSubmit={handleSubmit}>
         <div className="space-y-4">
-          <div>
-            <label htmlFor="itemName" className="mb-1.5 block text-[11px] font-medium text-app-textSecondary">
-              Item Name
-            </label>
-            <input
-              id="itemName"
-              type="text"
-              required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Rice, Dal"
-              className="h-[36px] w-full rounded-[6px] border border-app-border bg-white px-3 text-[13px] text-app-textPrimary focus:border-app-greenMid focus:outline-none"
-            />
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <label htmlFor="itemNameEn" className="mb-1.5 block text-[11px] font-medium text-app-textSecondary">
+                English Name
+              </label>
+              <input
+                id="itemNameEn"
+                type="text"
+                required
+                value={nameEn}
+                onChange={(e) => setNameEn(e.target.value)}
+                placeholder="e.g. Tomato"
+                className="h-[36px] w-full rounded-[6px] border border-app-border bg-white px-3 text-[13px] text-app-textPrimary focus:border-app-greenMid focus:outline-none"
+              />
+            </div>
+            <div className="flex-1">
+              <label htmlFor="itemNameTa" className="mb-1.5 block text-[11px] font-medium text-app-textSecondary">
+                Tamil Name
+              </label>
+              <input
+                id="itemNameTa"
+                type="text"
+                required
+                value={nameTa}
+                onChange={(e) => setNameTa(e.target.value)}
+                placeholder="e.g. தக்காளி"
+                className="h-[36px] w-full rounded-[6px] border border-app-border bg-white px-3 text-[13px] text-app-textPrimary focus:border-app-greenMid focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <label htmlFor="itemCategory" className="mb-1.5 block text-[11px] font-medium text-app-textSecondary">
+                Category
+              </label>
+              <select
+                id="itemCategory"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="h-[36px] w-full rounded-[6px] border border-app-border bg-white px-3 text-[13px] text-app-textPrimary focus:border-app-greenMid focus:outline-none"
+              >
+                <option value="Rice & grains">Rice & grains</option>
+                <option value="Dal / pulses">Dal / pulses</option>
+                <option value="Spices & masala">Spices & masala</option>
+                <option value="Oils & fats">Oils & fats</option>
+                <option value="Vegetables">Vegetables</option>
+                <option value="Dairy & protein">Dairy & protein</option>
+                <option value="Snacks / packaged items">Snacks / packaged items</option>
+                <option value="Household / utility">Household / utility</option>
+              </select>
+            </div>
+            <div className="flex-1">
+              <label htmlFor="trackingMode" className="mb-1.5 block text-[11px] font-medium text-app-textSecondary">
+                Tracking Mode
+              </label>
+              <select
+                id="trackingMode"
+                value={trackingMode}
+                onChange={(e) => setTrackingMode(e.target.value)}
+                className="h-[36px] w-full rounded-[6px] border border-app-border bg-white px-3 text-[13px] text-app-textPrimary focus:border-app-greenMid focus:outline-none"
+              >
+                <option value="measured">Exact (Measured)</option>
+                <option value="estimated">Rough (Estimated)</option>
+                <option value="count_only">Count Only</option>
+                <option value="reorder_only">Reorder Only</option>
+              </select>
+            </div>
           </div>
           
           <div className="flex gap-3">
@@ -84,9 +151,13 @@ export default function NewItemForm({ open, onClose, onSuccess }) {
                 className="h-[36px] w-full rounded-[6px] border border-app-border bg-white px-3 text-[13px] text-app-textPrimary focus:border-app-greenMid focus:outline-none"
               >
                 <option value="kg">kg</option>
+                <option value="g">g</option>
                 <option value="litres">litres</option>
                 <option value="packets">packets</option>
-                <option value="units">units</option>
+                <option value="nos">nos</option>
+                <option value="pieces">pieces</option>
+                <option value="boxes">boxes</option>
+                <option value="packs">packs</option>
               </select>
             </div>
             
@@ -103,7 +174,7 @@ export default function NewItemForm({ open, onClose, onSuccess }) {
                   required
                   value={threshold}
                   onChange={(e) => setThreshold(e.target.value)}
-                  placeholder="e.g. 10"
+                  placeholder="e.g. 0"
                   className="h-[36px] w-full rounded-[6px] border border-app-border bg-white px-3 text-[13px] text-app-textPrimary focus:border-app-greenMid focus:outline-none"
                 />
               </div>

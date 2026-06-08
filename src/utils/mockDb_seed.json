@@ -10,7 +10,8 @@
     "estimated_cost": 350,
     "purchase_cycle": "Monthly",
     "image_url": "https://images.unsplash.com/photo-1615485925600-97237c4fc1ec?auto=format&fit=crop&w=400&q=80",
-    "threshold_qty": 1,
+    "tracking_mode": "estimated",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -24,7 +25,8 @@
     "estimated_cost": 600,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 2,
+    "tracking_mode": "estimated",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -38,7 +40,8 @@
     "estimated_cost": 100,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "estimated",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -52,7 +55,8 @@
     "estimated_cost": 100,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "estimated",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -66,7 +70,8 @@
     "estimated_cost": 100,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "estimated",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -80,7 +85,8 @@
     "estimated_cost": 450,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "measured",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -94,7 +100,8 @@
     "estimated_cost": 50,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "estimated",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -108,7 +115,8 @@
     "estimated_cost": 1800,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 7,
+    "tracking_mode": "measured",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -122,7 +130,8 @@
     "estimated_cost": 200,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "measured",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -136,7 +145,8 @@
     "estimated_cost": 100,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "measured",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -150,7 +160,8 @@
     "estimated_cost": 100,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "estimated",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -164,7 +175,8 @@
     "estimated_cost": 200,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "estimated",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -178,7 +190,8 @@
     "estimated_cost": 250,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "estimated",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -192,7 +205,8 @@
     "estimated_cost": 100,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "estimated",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -206,7 +220,8 @@
     "estimated_cost": 100,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "estimated",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -220,7 +235,8 @@
     "estimated_cost": 250,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "estimated",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -234,7 +250,8 @@
     "estimated_cost": 100,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "estimated",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -248,7 +265,8 @@
     "estimated_cost": 38000,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 152,
+    "tracking_mode": "estimated",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -262,7 +280,8 @@
     "estimated_cost": 100,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "estimated",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -276,7 +295,8 @@
     "estimated_cost": 300,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "estimated",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -290,7 +310,8 @@
     "estimated_cost": 250,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "estimated",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -304,7 +325,8 @@
     "estimated_cost": 200,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "estimated",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -318,7 +340,8 @@
     "estimated_cost": 60000,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 240,
+    "tracking_mode": "measured",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -332,7 +355,8 @@
     "estimated_cost": 30000,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 120,
+    "tracking_mode": "estimated",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -346,7 +370,8 @@
     "estimated_cost": 50,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "measured",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -360,7 +385,8 @@
     "estimated_cost": 600,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 2,
+    "tracking_mode": "estimated",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -374,7 +400,8 @@
     "estimated_cost": 1300,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 5,
+    "tracking_mode": "measured",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -388,7 +415,8 @@
     "estimated_cost": 250,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "measured",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -402,7 +430,8 @@
     "estimated_cost": 175,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "measured",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -416,7 +445,8 @@
     "estimated_cost": 275,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "measured",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -430,7 +460,8 @@
     "estimated_cost": 250,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "measured",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -444,7 +475,8 @@
     "estimated_cost": 500,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 2,
+    "tracking_mode": "measured",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -458,7 +490,8 @@
     "estimated_cost": 300,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "estimated",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -472,7 +505,8 @@
     "estimated_cost": 325,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "estimated",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -486,7 +520,8 @@
     "estimated_cost": 387.5,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "estimated",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -500,7 +535,8 @@
     "estimated_cost": 1250,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 5,
+    "tracking_mode": "measured",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -514,7 +550,8 @@
     "estimated_cost": 37.5,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "measured",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -528,7 +565,8 @@
     "estimated_cost": 200,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "measured",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -542,7 +580,8 @@
     "estimated_cost": 300,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "measured",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -556,7 +595,8 @@
     "estimated_cost": 150,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "estimated",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -570,7 +610,8 @@
     "estimated_cost": 37.5,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "estimated",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -584,7 +625,8 @@
     "estimated_cost": 37.5,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "estimated",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -598,7 +640,8 @@
     "estimated_cost": 150,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "reorder_only",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -612,7 +655,8 @@
     "estimated_cost": 100,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "estimated",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -626,7 +670,8 @@
     "estimated_cost": 100,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "estimated",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -640,7 +685,8 @@
     "estimated_cost": 100,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "estimated",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -654,7 +700,8 @@
     "estimated_cost": 2500,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 10,
+    "tracking_mode": "estimated",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -668,7 +715,8 @@
     "estimated_cost": 25,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "estimated",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -682,7 +730,8 @@
     "estimated_cost": 50,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "reorder_only",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -696,7 +745,8 @@
     "estimated_cost": 150,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "estimated",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -710,7 +760,8 @@
     "estimated_cost": 25,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "estimated",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -724,7 +775,8 @@
     "estimated_cost": 20000,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 80,
+    "tracking_mode": "measured",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -738,7 +790,8 @@
     "estimated_cost": 100,
     "purchase_cycle": "Monthly",
     "image_url": "https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=400&q=80",
-    "threshold_qty": 1,
+    "tracking_mode": "measured",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -752,7 +805,8 @@
     "estimated_cost": 100,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "measured",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -766,7 +820,8 @@
     "estimated_cost": 50,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "estimated",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -780,7 +835,8 @@
     "estimated_cost": 2500,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 10,
+    "tracking_mode": "reorder_only",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -794,7 +850,8 @@
     "estimated_cost": 6000,
     "purchase_cycle": "Monthly",
     "image_url": "https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=400&q=80",
-    "threshold_qty": 24,
+    "tracking_mode": "measured",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -808,7 +865,8 @@
     "estimated_cost": 5000,
     "purchase_cycle": "Monthly",
     "image_url": "https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=400&q=80",
-    "threshold_qty": 20,
+    "tracking_mode": "measured",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -822,7 +880,8 @@
     "estimated_cost": 500,
     "purchase_cycle": "Monthly",
     "image_url": "https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=400&q=80",
-    "threshold_qty": 2,
+    "tracking_mode": "measured",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -836,7 +895,8 @@
     "estimated_cost": 350,
     "purchase_cycle": "Monthly",
     "image_url": "https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=400&q=80",
-    "threshold_qty": 1,
+    "tracking_mode": "measured",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -850,7 +910,8 @@
     "estimated_cost": 5000,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 20,
+    "tracking_mode": "estimated",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -864,7 +925,8 @@
     "estimated_cost": 400,
     "purchase_cycle": "Monthly",
     "image_url": "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=400&q=80",
-    "threshold_qty": 1,
+    "tracking_mode": "estimated",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -878,7 +940,8 @@
     "estimated_cost": 600,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 2,
+    "tracking_mode": "estimated",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -892,7 +955,8 @@
     "estimated_cost": 50,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "estimated",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -906,7 +970,8 @@
     "estimated_cost": 75,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "estimated",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -920,7 +985,8 @@
     "estimated_cost": 125,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "estimated",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -934,7 +1000,8 @@
     "estimated_cost": 100,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "count_only",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -948,7 +1015,8 @@
     "estimated_cost": 25,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "estimated",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -962,7 +1030,8 @@
     "estimated_cost": 50,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "estimated",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -976,7 +1045,8 @@
     "estimated_cost": 300,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "estimated",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -990,7 +1060,8 @@
     "estimated_cost": 150,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "estimated",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -1004,7 +1075,8 @@
     "estimated_cost": 50,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "estimated",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -1018,7 +1090,8 @@
     "estimated_cost": 150,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "estimated",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -1032,7 +1105,8 @@
     "estimated_cost": 50,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "reorder_only",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -1046,7 +1120,8 @@
     "estimated_cost": 50,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "reorder_only",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -1060,7 +1135,8 @@
     "estimated_cost": 50,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "reorder_only",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -1074,7 +1150,8 @@
     "estimated_cost": 500,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 2,
+    "tracking_mode": "estimated",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -1088,7 +1165,8 @@
     "estimated_cost": 500,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 2,
+    "tracking_mode": "estimated",
+    "threshold_qty": 0,
     "is_active": true
   },
   {
@@ -1102,7 +1180,8 @@
     "estimated_cost": 350,
     "purchase_cycle": "Monthly",
     "image_url": null,
-    "threshold_qty": 1,
+    "tracking_mode": "estimated",
+    "threshold_qty": 0,
     "is_active": true
   }
 ]

@@ -295,7 +295,20 @@ export default function SchoolDashboard() {
                   const rowBg = status === 'critical' ? 'bg-app-redBg/30' : status === 'low' ? 'bg-app-amberBg/30' : 'hover:bg-[#fafaf9] bg-white'
                   return (
                     <tr key={item.item_id} className={`border-b border-app-border last:border-0 transition-colors ${rowBg}`}>
-                      <td className="px-5 py-3.5 font-medium text-app-textPrimary">{item.item_name}</td>
+                      <td className="px-5 py-3.5 font-medium text-app-textPrimary">
+                        <div className="flex items-center gap-2">
+                          {item.item_name}
+                          {item.tracking_mode && item.tracking_mode !== 'measured' && (
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded whitespace-nowrap ${
+                              item.tracking_mode === 'estimated' ? 'bg-blue-50 text-blue-600 border border-blue-100' :
+                              item.tracking_mode === 'count_only' ? 'bg-purple-50 text-purple-600 border border-purple-100' :
+                              'bg-orange-50 text-orange-600 border border-orange-100'
+                            }`}>
+                              {item.tracking_mode.replace('_', ' ')}
+                            </span>
+                          )}
+                        </div>
+                      </td>
                       <td className="px-5 py-3.5 text-right font-medium text-app-textPrimary">
                         {item.current_stock} <span className="text-app-textSecondary font-normal">{item.unit}</span>
                       </td>

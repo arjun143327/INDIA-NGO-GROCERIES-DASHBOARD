@@ -26,6 +26,7 @@ create table if not exists public.inventory_items (
   estimated_cost numeric,
   purchase_cycle text,
   image_url text,
+  tracking_mode text not null default 'measured' check (tracking_mode in ('measured', 'estimated', 'count_only', 'reorder_only')),
   threshold_qty numeric not null default 10,
   is_active boolean not null default true,
   created_at timestamptz not null default now()

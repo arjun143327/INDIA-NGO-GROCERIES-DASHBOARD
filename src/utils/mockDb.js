@@ -2,20 +2,17 @@ import seedData from './mockDb_seed.json'
 
 const INITIAL_ITEMS = seedData
 
-const INITIAL_STOCK = [
-  { id: 'se-1', school_id: 'mock-school-1', item_id: 'item-1', qty_added: 120, entry_date: '2026-06-01', notes: 'Initial batch', created_at: new Date('2026-06-01T10:00:00Z').toISOString() },
-  { id: 'se-2', school_id: 'mock-school-1', item_id: 'item-2', qty_added: 40, entry_date: '2026-06-01', notes: 'Initial batch', created_at: new Date('2026-06-01T10:05:00Z').toISOString() },
-  { id: 'se-3', school_id: 'mock-school-1', item_id: 'item-3', qty_added: 30, entry_date: '2026-06-02', notes: 'Cooking oil delivery', created_at: new Date('2026-06-02T11:00:00Z').toISOString() },
-  { id: 'se-4', school_id: 'mock-school-1', item_id: 'item-4', qty_added: 10, entry_date: '2026-06-02', notes: 'Salt packet', created_at: new Date('2026-06-02T11:15:00Z').toISOString() },
-  { id: 'se-5', school_id: 'mock-school-1', item_id: 'item-5', qty_added: 4, entry_date: '2026-06-03', notes: 'Spice restock', created_at: new Date('2026-06-03T09:30:00Z').toISOString() },
-]
+const INITIAL_STOCK = seedData.map((item, index) => ({
+  id: `se-init-${item.id}`,
+  school_id: 'mock-school-1',
+  item_id: item.id,
+  qty_added: item.default_quantity || 0,
+  entry_date: new Date().toISOString().split('T')[0],
+  notes: 'Initial bulk purchase',
+  created_at: new Date(Date.now() - index * 1000).toISOString()
+}))
 
-const INITIAL_USAGE = [
-  { id: 'ul-1', school_id: 'mock-school-1', item_id: 'item-1', qty_used: 12, used_on: '2026-06-02', meal_type: 'Lunch', notes: 'Afternoon meal', created_at: new Date('2026-06-02T13:30:00Z').toISOString() },
-  { id: 'ul-2', school_id: 'mock-school-1', item_id: 'item-2', qty_used: 4, used_on: '2026-06-02', meal_type: 'Lunch', notes: 'Afternoon meal', created_at: new Date('2026-06-02T13:30:00Z').toISOString() },
-  { id: 'ul-3', school_id: 'mock-school-1', item_id: 'item-1', qty_used: 10, used_on: '2026-06-03', meal_type: 'Lunch', notes: 'Standard consumption', created_at: new Date('2026-06-03T13:45:00Z').toISOString() },
-  { id: 'ul-4', school_id: 'mock-school-1', item_id: 'item-3', qty_used: 2, used_on: '2026-06-03', meal_type: 'Lunch', notes: 'Oil for frying', created_at: new Date('2026-06-03T13:45:00Z').toISOString() },
-]
+const INITIAL_USAGE = []
 
 function getStorageItem(key, fallback) {
   const stored = localStorage.getItem(key)
@@ -48,7 +45,7 @@ export function isMockMode() {
 }
 
 export const mockDb = {
-  getItems: () => getStorageItem('mock_inventory_items_v2', INITIAL_ITEMS),
+  getItems: () => getStorageItem('mock_inventory_items_v5', INITIAL_ITEMS),
   
   saveItem: (item) => {
     const items = mockDb.getItems()
@@ -59,17 +56,17 @@ export const mockDb = {
       created_at: new Date().toISOString(),
       ...item,
     }
-    setStorageItem('mock_inventory_items_v2', [...items, newItem])
+    setStorageItem('mock_inventory_items_v5', [...items, newItem])
     return newItem
   },
 
   updateItem: (id, updates) => {
     const items = mockDb.getItems()
     const updated = items.map(item => item.id === id ? { ...item, ...updates } : item)
-    setStorageItem('mock_inventory_items_v2', updated)
+    setStorageItem('mock_inventory_items_v5', updated)
   },
 
-  getStockEntries: () => getStorageItem('mock_stock_entries_v2', INITIAL_STOCK),
+  getStockEntries: () => getStorageItem('mock_stock_entries_v5', INITIAL_STOCK),
 
   saveStockEntry: (entry) => {
     const entries = mockDb.getStockEntries()
@@ -79,11 +76,11 @@ export const mockDb = {
       created_at: new Date().toISOString(),
       ...entry,
     }
-    setStorageItem('mock_stock_entries_v2', [newEntry, ...entries])
+    setStorageItem('mock_stock_entries_v5', [newEntry, ...entries])
     return newEntry
   },
 
-  getUsageLogs: () => getStorageItem('mock_usage_logs_v2', INITIAL_USAGE),
+  getUsageLogs: () => getStorageItem('mock_usage_logs_v5', INITIAL_USAGE),
 
   saveUsageLog: (log) => {
     const logs = mockDb.getUsageLogs()
@@ -93,7 +90,7 @@ export const mockDb = {
       created_at: new Date().toISOString(),
       ...log,
     }
-    setStorageItem('mock_usage_logs_v2', [newLog, ...logs])
+    setStorageItem('mock_usage_logs_v5', [newLog, ...logs])
     return newLog
   },
 
@@ -120,6 +117,7 @@ export const mockDb = {
         category: item.category,
         image_url: item.image_url,
         unit: item.unit,
+        tracking_mode: item.tracking_mode,
         estimated_cost: item.estimated_cost,
         purchase_cycle: item.purchase_cycle,
         threshold_qty: item.threshold_qty,
