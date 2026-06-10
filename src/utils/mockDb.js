@@ -45,7 +45,7 @@ export function isMockMode() {
 }
 
 export const mockDb = {
-  getItems: () => getStorageItem('mock_inventory_items_v11', INITIAL_ITEMS),
+  getItems: () => getStorageItem('mock_inventory_items_v12', INITIAL_ITEMS),
   
   saveItem: (item) => {
     const items = mockDb.getItems()
@@ -56,17 +56,17 @@ export const mockDb = {
       created_at: new Date().toISOString(),
       ...item,
     }
-    setStorageItem('mock_inventory_items_v11', [...items, newItem])
+    setStorageItem('mock_inventory_items_v12', [...items, newItem])
     return newItem
   },
 
   updateItem: (id, updates) => {
     const items = mockDb.getItems()
     const updated = items.map(item => item.id === id ? { ...item, ...updates } : item)
-    setStorageItem('mock_inventory_items_v11', updated)
+    setStorageItem('mock_inventory_items_v12', updated)
   },
 
-  getStockEntries: () => getStorageItem('mock_stock_entries_v11', INITIAL_STOCK),
+  getStockEntries: () => getStorageItem('mock_stock_entries_v12', INITIAL_STOCK),
 
   saveStockEntry: (entry) => {
     const entries = mockDb.getStockEntries()
@@ -76,11 +76,11 @@ export const mockDb = {
       created_at: new Date().toISOString(),
       ...entry,
     }
-    setStorageItem('mock_stock_entries_v11', [newEntry, ...entries])
+    setStorageItem('mock_stock_entries_v12', [newEntry, ...entries])
     return newEntry
   },
 
-  getUsageLogs: () => getStorageItem('mock_usage_logs_v11', INITIAL_USAGE),
+  getUsageLogs: () => getStorageItem('mock_usage_logs_v12', INITIAL_USAGE),
 
   saveUsageLog: (log) => {
     const logs = mockDb.getUsageLogs()
@@ -90,8 +90,21 @@ export const mockDb = {
       created_at: new Date().toISOString(),
       ...log,
     }
-    setStorageItem('mock_usage_logs_v11', [newLog, ...logs])
+    setStorageItem('mock_usage_logs_v12', [newLog, ...logs])
     return newLog
+  },
+
+  getPriceUpdates: () => getStorageItem('mock_price_updates_v12', []),
+
+  savePriceUpdate: (update) => {
+    const updates = mockDb.getPriceUpdates()
+    const newUpdate = {
+      id: crypto.randomUUID(),
+      created_at: new Date().toISOString(),
+      ...update,
+    }
+    setStorageItem('mock_price_updates_v12', [newUpdate, ...updates])
+    return newUpdate
   },
 
   getCurrentStock: () => {
@@ -153,7 +166,19 @@ export const mockDb = {
       }
     })
 
-    return [...stock, ...usage]
+    const priceUpdates = mockDb.getPriceUpdates().map(e => {
+      const item = items.find(i => i.id === e.item_id)
+      return {
+        id: e.id,
+        type: 'price_update',
+        old_price: e.old_price,
+        new_price: e.new_price,
+        created_at: e.created_at,
+        item_name: item ? `${item.name_en} (${item.name_ta})` : 'Unknown item',
+      }
+    })
+
+    return [...stock, ...usage, ...priceUpdates]
       .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
       .slice(0, limit)
   }

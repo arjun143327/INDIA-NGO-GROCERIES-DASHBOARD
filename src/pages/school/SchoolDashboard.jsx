@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { Search, Filter, AlertCircle, TrendingDown, TrendingUp, Package, ClipboardList, ArrowRightLeft, Activity, BarChart2, Download } from 'lucide-react'
+import { Search, Filter, AlertCircle, TrendingDown, TrendingUp, Package, ClipboardList, ArrowRightLeft, Activity, BarChart2, Download, Pencil, Check, X } from 'lucide-react'
 import StatCard from '../../components/ui/StatCard'
 import AlertStrip from '../../components/ui/AlertStrip'
 import ProgressBar from '../../components/ui/ProgressBar'
@@ -23,6 +23,10 @@ export default function SchoolDashboard() {
   const [categoryFilter, setCategoryFilter] = useState('All')
   const [activityTypeFilter, setActivityTypeFilter] = useState('All')
   const [reportRange, setReportRange] = useState('7days')
+  
+  const [editingItemId, setEditingItemId] = useState(null)
+  const [editingPrice, setEditingPrice] = useState('')
+  const [updatingPrice, setUpdatingPrice] = useState(false)
   
   // Data hooks
   const { stock, loading: stockLoading, refetch: refetchStock } = useCurrentStock()
@@ -60,6 +64,46 @@ export default function SchoolDashboard() {
 
     return matchesSearch && matchesStatus && matchesCategory
   })
+
+  const handleSavePrice = async (itemId) => {
+    if (!editingPrice || isNaN(editingPrice)) return
+    
+    setUpdatingPrice(true)
+    const newPrice = Number(editingPrice)
+    const oldItem = stock.find(i => i.item_id === itemId)
+    const oldPrice = oldItem?.estimated_cost || 0
+
+    if (newPrice !== oldPrice) {
+      if (isMockMode()) {
+        import('../../utils/mockDb').then(({ mockDb }) => {
+          mockDb.updateItem(itemId, { estimated_cost: newPrice })
+          mockDb.savePriceUpdate({
+            school_id: profile?.school_id || 'mock-school-1',
+            item_id: itemId,
+            old_price: oldPrice,
+            new_price: newPrice,
+            updated_by: profile?.id || 'mock-user'
+          })
+          handleUpdate()
+        })
+      } else {
+        import('../../lib/supabase').then(async ({ supabase }) => {
+          await supabase.from('inventory_items').update({ estimated_cost: newPrice }).eq('id', itemId)
+          await supabase.from('price_updates').insert({
+            school_id: profile?.school_id,
+            item_id: itemId,
+            old_price: oldPrice,
+            new_price: newPrice,
+            updated_by: profile?.id
+          })
+          handleUpdate()
+        })
+      }
+    }
+    
+    setEditingItemId(null)
+    setUpdatingPrice(false)
+  }
   
   // Filter logic for activity tab
   const filteredEntries = entries.filter((entry) => {
@@ -275,7 +319,8 @@ export default function SchoolDashboard() {
           <table className="w-full text-left text-[13px]">
             <thead>
               <tr className="border-b border-app-border bg-app-surfaceAlt text-[11px] uppercase tracking-[0.5px] text-app-textSecondary">
-                <th className="px-5 py-3 font-semibold text-left">Item</th>
+                <th className="px-5 py-3 font-semibold text-left">Item Name</th>
+                <th className="px-5 py-3 font-semibold text-right">Price (₹)</th>
                 <th className="px-5 py-3 font-semibold text-right">In Stock</th>
                 <th className="px-5 py-3 font-semibold text-right">Threshold</th>
                 <th className="px-5 py-3 font-semibold text-left w-[120px]">Level</th>
@@ -289,7 +334,7 @@ export default function SchoolDashboard() {
                 </tr>
               ) : filteredStock.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="px-4 py-8 text-center">
+                  <td colSpan="6" className="px-4 py-8 text-center">
                     <p className="text-[13px] font-medium text-app-textPrimary">No items found</p>
                     <p className="mt-1 text-[12px] text-app-textSecondary">
                       {searchQuery || statusFilter !== 'All' 
@@ -308,6 +353,40 @@ export default function SchoolDashboard() {
                         <div className="flex items-center gap-2">
                           {item.item_name}
                         </div>
+                      </td>
+                      <td className="px-5 py-3.5 text-right">
+                        {editingItemId === item.item_id ? (
+                          <div className="flex items-center justify-end gap-1">
+                            <input
+                              type="number"
+                              autoFocus
+                              min="0"
+                              disabled={updatingPrice}
+                              value={editingPrice}
+                              onChange={(e) => setEditingPrice(e.target.value)}
+                              className="w-[70px] h-[28px] rounded border border-app-border px-2 text-[12px] text-right focus:border-app-greenMid focus:outline-none"
+                            />
+                            <button
+                              disabled={updatingPrice}
+                              onClick={() => handleSavePrice(item.item_id)}
+                              className="p-1 text-app-greenMid hover:bg-app-greenPale rounded disabled:opacity-50"
+                            >
+                              <Check size={14} />
+                            </button>
+                            <button
+                              disabled={updatingPrice}
+                              onClick={() => setEditingItemId(null)}
+                              className="p-1 text-app-textSecondary hover:bg-app-surfaceAlt rounded disabled:opacity-50"
+                            >
+                              <X size={14} />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-end gap-2 group cursor-pointer" onClick={() => { setEditingItemId(item.item_id); setEditingPrice(item.estimated_cost || 0) }}>
+                            <span className="font-medium text-app-textPrimary">₹{item.estimated_cost || 0}</span>
+                            <Pencil size={12} className="text-app-textSecondary opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </div>
+                        )}
                       </td>
                       <td className="px-5 py-3.5 text-right font-medium text-app-textPrimary">
                         {item.current_stock} <span className="text-app-textSecondary font-normal">{item.unit}</span>

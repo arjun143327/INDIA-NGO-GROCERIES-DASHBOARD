@@ -55,6 +55,16 @@ create table if not exists public.usage_logs (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.price_updates (
+  id uuid primary key default gen_random_uuid(),
+  school_id uuid not null references public.schools (id) on delete cascade,
+  item_id uuid not null references public.inventory_items (id) on delete cascade,
+  old_price numeric,
+  new_price numeric not null,
+  updated_by uuid references auth.users (id),
+  created_at timestamptz not null default now()
+);
+
 create or replace view public.current_stock_view
 with (security_invoker = true) as
 with stock_totals as (
@@ -77,6 +87,7 @@ select
   i.unit,
   i.image_url,
   i.threshold_qty,
+  i.estimated_cost,
   coalesce(st.total_added, 0) - coalesce(ut.total_used, 0) as current_stock
 from public.inventory_items i
 left join stock_totals st on st.item_id = i.id
@@ -89,6 +100,7 @@ alter table public.profiles enable row level security;
 alter table public.inventory_items enable row level security;
 alter table public.stock_entries enable row level security;
 alter table public.usage_logs enable row level security;
+alter table public.price_updates enable row level security;
 
 create or replace function public.get_my_school_id()
 returns uuid
@@ -174,4 +186,25 @@ drop policy if exists "items_update" on public.inventory_items;
 create policy "items_update"
 on public.inventory_items
 for update
-using (public.get_my_role() = 'ngo_admin');
+using (
+  public.get_my_role() = 'ngo_admin'
+  or school_id = public.get_my_school_id()
+);
+
+drop policy if exists "price_updates_select" on public.price_updates;
+create policy "price_updates_select"
+on public.price_updates
+for select
+using (
+  public.get_my_role() = 'ngo_admin'
+  or school_id = public.get_my_school_id()
+);
+
+drop policy if exists "price_updates_insert" on public.price_updates;
+create policy "price_updates_insert"
+on public.price_updates
+for insert
+with check (
+  school_id = public.get_my_school_id()
+  and updated_by = auth.uid()
+);

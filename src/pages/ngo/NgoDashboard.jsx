@@ -239,7 +239,7 @@ export default function NgoDashboard() {
             )}
           </div>
 
-          <div className="grid gap-4 lg:grid-cols-[1fr,1fr]">
+          <div className="grid gap-4 lg:grid-cols-3">
             {/* Alerts Section */}
             <div className="rounded-[10px] border border-app-border bg-app-surface shadow-sm shadow-black/5 flex flex-col overflow-hidden h-[340px]">
               <div className="border-b border-app-border px-5 py-4 flex items-center gap-2 bg-app-surfaceAlt/50">
@@ -277,6 +277,23 @@ export default function NgoDashboard() {
                   <p className="p-4 text-center text-[13px] text-app-textSecondary mt-8 opacity-70">No activity recorded in this period.</p>
                 ) : (
                   filteredEntries.slice(0, 10).map((entry, idx) => (
+                    <ActivityRow key={`${entry.type}-${entry.id}-${idx}`} entry={entry} />
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Price Updates Section */}
+            <div className="rounded-[10px] border border-app-border bg-app-surface shadow-sm shadow-black/5 flex flex-col overflow-hidden h-[340px]">
+              <div className="border-b border-app-border px-5 py-4 flex items-center gap-2 bg-app-surfaceAlt/50">
+                <AlertCircle size={16} className="text-blue-500" />
+                <h2 className="text-[14px] font-semibold text-app-textPrimary">Price Audits</h2>
+              </div>
+              <div className="flex-1 overflow-y-auto">
+                {entries.filter(e => e.type === 'price_update').length === 0 ? (
+                  <p className="p-4 text-center text-[13px] text-app-textSecondary mt-8 opacity-70">No price updates recorded.</p>
+                ) : (
+                  entries.filter(e => e.type === 'price_update').slice(0, 10).map((entry, idx) => (
                     <ActivityRow key={`${entry.type}-${entry.id}-${idx}`} entry={entry} />
                   ))
                 )}
