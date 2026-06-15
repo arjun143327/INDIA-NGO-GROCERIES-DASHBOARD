@@ -19,11 +19,9 @@ export function useCurrentStock() {
     setLoading(true)
 
     if (isMockMode()) {
-      setTimeout(() => {
-        const data = mockDb.getCurrentStock()
-        setStock(data)
-        setLoading(false)
-      }, 300); //300ms to simulate network latency
+      const data = mockDb.getCurrentStock()
+      setStock(data)
+      setLoading(false)
       return
     }
 

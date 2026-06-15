@@ -16,11 +16,16 @@ const INITIAL_USAGE = []
 
 function getStorageItem(key, fallback) {
   const stored = localStorage.getItem(key)
-  if (!stored) {
+  if (!stored || stored === 'null' || stored === 'undefined') {
     localStorage.setItem(key, JSON.stringify(fallback))
     return fallback
   }
-  return JSON.parse(stored)
+  try {
+    const parsed = JSON.parse(stored)
+    return parsed || fallback
+  } catch (e) {
+    return fallback
+  }
 }
 
 function setStorageItem(key, value) {
@@ -97,9 +102,9 @@ export const mockDb = {
   getPriceUpdates: () => getStorageItem('mock_price_updates_v12', []),
 
   savePriceUpdate: (update) => {
-    const updates = mockDb.getPriceUpdates()
+    const updates = mockDb.getPriceUpdates() || []
     const newUpdate = {
-      id: crypto.randomUUID(),
+      id: `price-update-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
       created_at: new Date().toISOString(),
       ...update,
     }

@@ -391,6 +391,10 @@ export default function NgoDashboard() {
                                   disabled={updatingThreshold}
                                   value={editingThreshold}
                                   onChange={(e) => setEditingThreshold(e.target.value)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') handleSaveThreshold(item.item_id)
+                                    if (e.key === 'Escape') setEditingItemId(null)
+                                  }}
                                   className="w-[60px] h-[28px] rounded border border-app-border px-2 text-[12px] text-right focus:border-app-greenMid focus:outline-none"
                                 />
                                 <button

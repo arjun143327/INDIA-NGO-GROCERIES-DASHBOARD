@@ -14,8 +14,12 @@ import StockEntryForm from '../../components/forms/StockEntryForm'
 import UsageEntryForm from '../../components/forms/UsageEntryForm'
 import { downloadExcel } from '../../utils/exportExcel'
 import CategoryChips from '../../components/ui/CategoryChips'
+import { isMockMode, mockDb } from '../../utils/mockDb'
+import { supabase } from '../../lib/supabase'
+import { useAuth } from '../../context/AuthContext'
 
 export default function SchoolDashboard() {
+  const { profile } = useAuth()
   const [activeModal, setActiveModal] = useState(null)
   const [activeTab, setActiveTab] = useState('Overview')
   const [searchQuery, setSearchQuery] = useState('')
@@ -66,7 +70,7 @@ export default function SchoolDashboard() {
   })
 
   const handleSavePrice = async (itemId) => {
-    if (!editingPrice || isNaN(editingPrice)) return
+    if (editingPrice === '' || isNaN(editingPrice) || Number(editingPrice) < 0) return
     
     setUpdatingPrice(true)
     const newPrice = Number(editingPrice)
@@ -74,8 +78,8 @@ export default function SchoolDashboard() {
     const oldPrice = oldItem?.estimated_cost || 0
 
     if (newPrice !== oldPrice) {
-      if (isMockMode()) {
-        import('../../utils/mockDb').then(({ mockDb }) => {
+      try {
+        if (isMockMode()) {
           mockDb.updateItem(itemId, { estimated_cost: newPrice })
           mockDb.savePriceUpdate({
             school_id: profile?.school_id || 'mock-school-1',
@@ -85,19 +89,26 @@ export default function SchoolDashboard() {
             updated_by: profile?.id || 'mock-user'
           })
           handleUpdate()
-        })
-      } else {
-        import('../../lib/supabase').then(async ({ supabase }) => {
-          await supabase.from('inventory_items').update({ estimated_cost: newPrice }).eq('id', itemId)
-          await supabase.from('price_updates').insert({
+        } else {
+          const { error: updateError } = await supabase.from('inventory_items').update({ estimated_cost: newPrice }).eq('id', itemId)
+          if (updateError) throw updateError
+          
+          const { error: insertError } = await supabase.from('price_updates').insert({
             school_id: profile?.school_id,
             item_id: itemId,
             old_price: oldPrice,
             new_price: newPrice,
             updated_by: profile?.id
           })
+          if (insertError) throw insertError
+          
           handleUpdate()
-        })
+        }
+      } catch (err) {
+        console.error('Failed to update price:', err)
+        alert('Failed to update price: ' + (err.message || 'Unknown error'))
+        setUpdatingPrice(false)
+        return // Don't close the edit box so user knows it failed
       }
     }
     
@@ -364,6 +375,10 @@ export default function SchoolDashboard() {
                               disabled={updatingPrice}
                               value={editingPrice}
                               onChange={(e) => setEditingPrice(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleSavePrice(item.item_id)
+                                if (e.key === 'Escape') setEditingItemId(null)
+                              }}
                               className="w-[70px] h-[28px] rounded border border-app-border px-2 text-[12px] text-right focus:border-app-greenMid focus:outline-none"
                             />
                             <button
