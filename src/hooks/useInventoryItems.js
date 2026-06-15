@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
-import { isMockMode, mockDb } from '../utils/mockDb'
 
 export function useInventoryItems() {
   const { profile } = useAuth()
@@ -17,15 +16,6 @@ export function useInventoryItems() {
     }
 
     setLoading(true)
-
-    if (isMockMode()) {
-      setTimeout(() => {
-        const data = mockDb.getItems().filter(i => i.is_active)
-        setItems(data)
-        setLoading(false)
-      }, 300)
-      return
-    }
 
     let query = supabase
       .from('inventory_items')
@@ -53,12 +43,6 @@ export function useInventoryItems() {
 
   useEffect(() => {
     refetch()
-    
-    if (isMockMode()) {
-      const handleMockUpdate = () => refetch()
-      window.addEventListener('mock-db-update', handleMockUpdate)
-      return () => window.removeEventListener('mock-db-update', handleMockUpdate)
-    }
   }, [refetch])
 
   return { items, loading, error, refetch }

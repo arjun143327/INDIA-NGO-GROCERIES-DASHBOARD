@@ -3,11 +3,12 @@ import { Navigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { Eye, EyeOff, AlertCircle } from 'lucide-react'
 import logo from '../assets/logo.png'
+import { supabase } from '../lib/supabase'
 
 export default function Login() {
-  const { session, loading, mockLogin } = useAuth()
-  const [email, setEmail] = useState('school@indiango.org') // Hardcoded for testing
-  const [password, setPassword] = useState('password123')
+  const { session, loading } = useAuth()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
@@ -19,11 +20,16 @@ export default function Login() {
     setSubmitting(true)
     setError('')
 
-    // Mock Login: wait 1s, then call mockLogin from AuthContext
-    setTimeout(() => {
-      mockLogin(email)
+    const { error: authError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+
+    if (authError) {
+      setError(authError.message)
       setSubmitting(false)
-    }, 1000)
+    }
+    // If successful, AuthContext onAuthStateChange will handle navigation
   }
 
   if (!loading && session) {
@@ -74,7 +80,7 @@ export default function Login() {
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
                   className="h-10 w-full rounded-md border border-app-border bg-white px-3 text-[14px] text-app-textPrimary transition-colors placeholder:text-gray-400 focus:border-app-greenDark focus:outline-none focus:ring-1 focus:ring-app-greenDark"
-                  placeholder="name@example.com"
+                  placeholder="name@indiango.org"
                 />
               </div>
 

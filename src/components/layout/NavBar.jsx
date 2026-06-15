@@ -1,4 +1,5 @@
 import { useAuth } from '../../context/AuthContext'
+import { supabase } from '../../lib/supabase'
 
 function getSubLabel(profile) {
   if (!profile) {
@@ -14,6 +15,18 @@ function getSubLabel(profile) {
 
 export default function NavBar() {
   const { profile } = useAuth()
+
+  async function handleLogout() {
+    try {
+      await supabase.auth.signOut()
+    } catch (e) {
+      console.error(e)
+    } finally {
+      localStorage.clear()
+      sessionStorage.clear()
+      window.location.href = '/login'
+    }
+  }
 
   return (
     <header className="h-[52px] border-b border-app-greenDark bg-app-greenDark px-5 text-white">
@@ -31,14 +44,25 @@ export default function NavBar() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <div
-            aria-label="User avatar"
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15 text-xs font-semibold"
-          >
-            {(profile?.name ?? 'U').slice(0, 1).toUpperCase()}
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <div
+              aria-label="User avatar"
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15 text-xs font-semibold"
+            >
+              {(profile?.role === 'ngo_admin' ? 'A' : 'S')}
+            </div>
+            <div className="text-sm font-medium">
+              {profile?.role === 'ngo_admin' ? 'NGO Admin' : 'School Staff'}
+            </div>
           </div>
-          <div className="text-sm font-medium">{profile?.name ?? 'Guest'}</div>
+          
+          <button
+            onClick={handleLogout}
+            className="text-xs font-semibold text-white/80 hover:text-white transition-colors"
+          >
+            Sign Out
+          </button>
         </div>
       </div>
     </header>

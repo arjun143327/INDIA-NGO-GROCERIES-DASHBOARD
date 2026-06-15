@@ -14,7 +14,6 @@ import StockEntryForm from '../../components/forms/StockEntryForm'
 import UsageEntryForm from '../../components/forms/UsageEntryForm'
 import { downloadExcel } from '../../utils/exportExcel'
 import CategoryChips from '../../components/ui/CategoryChips'
-import { isMockMode, mockDb } from '../../utils/mockDb'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
 
@@ -79,31 +78,19 @@ export default function SchoolDashboard() {
 
     if (newPrice !== oldPrice) {
       try {
-        if (isMockMode()) {
-          mockDb.updateItem(itemId, { estimated_cost: newPrice })
-          mockDb.savePriceUpdate({
-            school_id: profile?.school_id || 'mock-school-1',
-            item_id: itemId,
-            old_price: oldPrice,
-            new_price: newPrice,
-            updated_by: profile?.id || 'mock-user'
-          })
-          handleUpdate()
-        } else {
-          const { error: updateError } = await supabase.from('inventory_items').update({ estimated_cost: newPrice }).eq('id', itemId)
-          if (updateError) throw updateError
-          
-          const { error: insertError } = await supabase.from('price_updates').insert({
-            school_id: profile?.school_id,
-            item_id: itemId,
-            old_price: oldPrice,
-            new_price: newPrice,
-            updated_by: profile?.id
-          })
-          if (insertError) throw insertError
-          
-          handleUpdate()
-        }
+        const { error: updateError } = await supabase.from('inventory_items').update({ estimated_cost: newPrice }).eq('id', itemId)
+        if (updateError) throw updateError
+        
+        const { error: insertError } = await supabase.from('price_updates').insert({
+          school_id: profile?.school_id,
+          item_id: itemId,
+          old_price: oldPrice,
+          new_price: newPrice,
+          updated_by: profile?.id
+        })
+        if (insertError) throw insertError
+        
+        handleUpdate()
       } catch (err) {
         console.error('Failed to update price:', err)
         alert('Failed to update price: ' + (err.message || 'Unknown error'))

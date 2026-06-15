@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import Modal from '../ui/Modal'
 import { supabase } from '../../lib/supabase'
-import { isMockMode, mockDb } from '../../utils/mockDb'
 import { useAuth } from '../../context/AuthContext'
 import { useInventoryItems } from '../../hooks/useInventoryItems'
 import { useCurrentStock } from '../../hooks/useCurrentStock'
@@ -41,16 +40,15 @@ export default function StockEntryForm({ open, onClose, onSuccess }) {
         
         // Standard incoming stock with expense
         const entry = {
-          school_id: profile?.school_id || 'mock-school-1',
+          school_id: profile?.school_id,
           item_id: item.item_id,
           qty_added: qty,
           entry_date: date,
           total_expense: expense,
           notes,
-          created_by: profile?.id || 'mock-user'
+          created_by: profile?.id
         }
-        if (isMockMode()) mockDb.saveStockEntry(entry)
-        else await supabase.from('stock_entries').insert(entry)
+        await supabase.from('stock_entries').insert(entry)
       }
 
       setSubmitting(false)

@@ -14,7 +14,6 @@ import { useAlerts } from '../../hooks/useAlerts'
 import { useActivityFeed } from '../../hooks/useActivityFeed'
 import { AlertCircle, Calendar, Pencil, Check, X } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
-import { isMockMode, mockDb } from '../../utils/mockDb'
 
 const TABS = ['Overview', 'Master Catalog', 'Usage Trends', 'Expenditure']
 
@@ -155,24 +154,14 @@ export default function NgoDashboard() {
 
     setUpdatingThreshold(true)
     try {
-      if (isMockMode()) {
-        setTimeout(() => {
-          mockDb.updateItem(itemId, { threshold_qty: val })
-          setEditingItemId(null)
-          setUpdatingThreshold(false)
-        }, 300)
-      } else {
-        const { error } = await supabase
-          .from('inventory_items')
-          .update({ threshold_qty: val })
-          .eq('id', itemId)
-        
-        if (error) throw error
-        setEditingItemId(null)
-        setUpdatingThreshold(false)
-        // Since we don't have realtime subscription directly on the view, we might need a manual refresh,
-        // but for now relying on user refresh or mock db events is sufficient.
-      }
+      const { error } = await supabase
+        .from('inventory_items')
+        .update({ threshold_qty: val })
+        .eq('id', itemId)
+      
+      if (error) throw error
+      setEditingItemId(null)
+      setUpdatingThreshold(false)
     } catch (err) {
       console.error('Failed to update threshold:', err)
       setUpdatingThreshold(false)

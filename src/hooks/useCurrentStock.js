@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
-import { isMockMode, mockDb } from '../utils/mockDb'
 
 export function useCurrentStock() {
   const { profile } = useAuth()
@@ -17,13 +16,6 @@ export function useCurrentStock() {
     }
 
     setLoading(true)
-
-    if (isMockMode()) {
-      const data = mockDb.getCurrentStock()
-      setStock(data)
-      setLoading(false)
-      return
-    }
 
     let query = supabase.from('current_stock_view').select('*').order('item_name')
 
@@ -46,12 +38,6 @@ export function useCurrentStock() {
 
   useEffect(() => {
     refetch()
-    
-    if (isMockMode()) {
-      const handleMockUpdate = () => refetch()
-      window.addEventListener('mock-db-update', handleMockUpdate)
-      return () => window.removeEventListener('mock-db-update', handleMockUpdate)
-    }
   }, [refetch])
 
   return { stock, loading, error, refetch }

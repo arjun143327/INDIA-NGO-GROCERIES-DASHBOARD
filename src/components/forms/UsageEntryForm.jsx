@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import Modal from '../ui/Modal'
 import { supabase } from '../../lib/supabase'
-import { isMockMode, mockDb } from '../../utils/mockDb'
 import { useAuth } from '../../context/AuthContext'
 import { useCurrentStock } from '../../hooks/useCurrentStock'
 import { Trash2, Plus } from 'lucide-react'
@@ -48,31 +47,22 @@ export default function UsageEntryForm({ open, onClose, onSuccess }) {
     setError('')
 
     const logs = items.map(item => ({
-      school_id: profile?.school_id || 'mock-school-1',
+      school_id: profile?.school_id,
       item_id: item.item_id,
       qty_used: Number(item.quantity),
       used_on: date,
       meal_type: mealType,
       notes,
-      created_by: profile?.id || 'mock-user'
+      created_by: profile?.id
     }))
 
     try {
-      if (isMockMode()) {
-        setTimeout(() => {
-          logs.forEach(log => mockDb.saveUsageLog(log))
-          setSubmitting(false)
-          resetForm()
-          onSuccess()
-        }, 300)
-      } else {
-        const { error: insertError } = await supabase.from('usage_logs').insert(logs)
-        if (insertError) throw insertError
+      const { error: insertError } = await supabase.from('usage_logs').insert(logs)
+      if (insertError) throw insertError
 
-        setSubmitting(false)
-        resetForm()
-        onSuccess()
-      }
+      setSubmitting(false)
+      resetForm()
+      onSuccess()
     } catch (err) {
       setError('Failed to log usage. Please try again.')
       setSubmitting(false)

@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import Modal from '../ui/Modal'
 import { supabase } from '../../lib/supabase'
-import { isMockMode, mockDb } from '../../utils/mockDb'
 import { useAuth } from '../../context/AuthContext'
 
 export default function NewItemForm({ open, onClose, onSuccess }) {
@@ -28,26 +27,17 @@ export default function NewItemForm({ open, onClose, onSuccess }) {
       category,
       unit,
       threshold_qty: Number(threshold),
-      school_id: profile?.school_id || 'mock-school-1',
+      school_id: profile?.school_id,
       is_active: true
     }
 
     try {
-      if (isMockMode()) {
-        setTimeout(() => {
-          mockDb.saveItem(newItem)
-          setSubmitting(false)
-          reset()
-          onSuccess()
-        }, 300)
-      } else {
-        const { error: insertError } = await supabase.from('inventory_items').insert(newItem)
-        if (insertError) throw insertError
+      const { error: insertError } = await supabase.from('inventory_items').insert(newItem)
+      if (insertError) throw insertError
 
-        setSubmitting(false)
-        reset()
-        onSuccess()
-      }
+      setSubmitting(false)
+      reset()
+      onSuccess()
     } catch (err) {
       setError('Failed to add item. Please try again.')
       setSubmitting(false)
