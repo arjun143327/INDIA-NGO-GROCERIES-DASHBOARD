@@ -247,6 +247,7 @@ export default function StockEntryForm({ open, onClose, onSuccess }) {
               <textarea
                 id="stockNotes"
                 rows="2"
+                maxLength={250}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="e.g. Received from District supply"

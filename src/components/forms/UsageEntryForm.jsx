@@ -208,6 +208,7 @@ export default function UsageEntryForm({ open, onClose, onSuccess }) {
             <textarea
               id="usageNotes"
               rows="2"
+              maxLength={250}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="e.g. Extra students today"

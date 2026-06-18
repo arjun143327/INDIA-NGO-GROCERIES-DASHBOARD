@@ -210,6 +210,46 @@ with check (
   and updated_by = auth.uid()
 );
 
+-- Add RLS to schools
+alter table public.schools enable row level security;
+
+drop policy if exists "schools_select" on public.schools;
+create policy "schools_select"
+on public.schools
+for select
+using (true);
+
+-- Explicit Deny Deletes
+drop policy if exists "prevent_delete_items" on public.inventory_items;
+create policy "prevent_delete_items" on public.inventory_items for delete using (false);
+
+drop policy if exists "prevent_delete_stock" on public.stock_entries;
+create policy "prevent_delete_stock" on public.stock_entries for delete using (false);
+
+drop policy if exists "prevent_delete_usage" on public.usage_logs;
+create policy "prevent_delete_usage" on public.usage_logs for delete using (false);
+
+drop policy if exists "prevent_delete_price" on public.price_updates;
+create policy "prevent_delete_price" on public.price_updates for delete using (false);
+
+-- Column-Level Protection for threshold_qty
+create or replace function public.check_item_update_permissions()
+returns trigger as $$
+begin
+  if public.get_my_role() != 'ngo_admin' then
+    if new.threshold_qty != old.threshold_qty then
+      raise exception 'Unauthorized: Only NGO Admins can modify the threshold quantity.';
+    end if;
+  end if;
+  return new;
+end;
+$$ language plpgsql security definer;
+
+drop trigger if exists enforce_column_roles on public.inventory_items;
+create trigger enforce_column_roles
+  before update on public.inventory_items
+  for each row execute procedure public.check_item_update_permissions();
+
 -- Automatic Profile Creation Trigger
 create or replace function public.handle_new_user() 
 returns trigger as $$

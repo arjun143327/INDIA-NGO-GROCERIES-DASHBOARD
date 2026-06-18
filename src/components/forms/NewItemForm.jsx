@@ -64,6 +64,7 @@ export default function NewItemForm({ open, onClose, onSuccess }) {
                 id="itemNameEn"
                 type="text"
                 required
+                maxLength={100}
                 value={nameEn}
                 onChange={(e) => setNameEn(e.target.value)}
                 placeholder="e.g. Tomato"
@@ -78,6 +79,7 @@ export default function NewItemForm({ open, onClose, onSuccess }) {
                 id="itemNameTa"
                 type="text"
                 required
+                maxLength={100}
                 value={nameTa}
                 onChange={(e) => setNameTa(e.target.value)}
                 placeholder="e.g. தக்காளி"

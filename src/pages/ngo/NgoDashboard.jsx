@@ -12,8 +12,9 @@ import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Cart
 import { useCurrentStock } from '../../hooks/useCurrentStock'
 import { useAlerts } from '../../hooks/useAlerts'
 import { useActivityFeed } from '../../hooks/useActivityFeed'
-import { AlertCircle, Calendar, Pencil, Check, X } from 'lucide-react'
+import { AlertCircle, Calendar, Pencil, Check, X, Download } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
+import { downloadMultiSheetExcel } from '../../utils/exportExcel'
 
 const TABS = ['Overview', 'Master Catalog', 'Usage Trends', 'Expenditure']
 
@@ -148,6 +149,66 @@ export default function NgoDashboard() {
   }, [stock, critical, low])
 
   // --- HANDLERS ---
+  const handleDownloadReport = () => {
+    // 1. Prepare Inventory Sheet
+    const inventoryData = stock.map(item => {
+      const status = stockStatus(item.current_stock, item.threshold_qty)
+      let displayStatus = 'HEALTHY (OK)'
+      if (status === 'critical') displayStatus = 'CRITICAL'
+      else if (status === 'low') displayStatus = 'LOW STOCK'
+
+      return {
+        'Item Name': item.item_name,
+        'Category': item.category,
+        'Current Stock': Number(item.current_stock),
+        'Unit': item.unit,
+        'Min Threshold': Number(item.threshold_qty),
+        'Estimated Cost (₹)': Number(item.estimated_cost || 0),
+        'Status': displayStatus
+      }
+    })
+
+    // 2. Prepare Expenditure/Spending Log Sheet
+    const stockEntries = filteredEntries.filter(e => e.type === 'stock')
+    const expenditureLog = stockEntries.map(e => {
+      const date = new Date(e.entry_date || e.created_at)
+      return {
+        'Date': date.toLocaleDateString('en-IN'),
+        'Item Name': e.item_name,
+        'Category': e.category,
+        'Quantity Added': Number(e.qty),
+        'Unit': e.unit,
+        'Total Spend (₹)': Number(e.total_expense || 0)
+      }
+    })
+
+    // 3. Prepare Price Audit History Sheet
+    const priceUpdates = filteredEntries.filter(e => e.type === 'price_update')
+    const priceLog = priceUpdates.map(e => {
+      const date = new Date(e.created_at)
+      const diff = Number(e.new_price || 0) - Number(e.old_price || 0)
+      return {
+        'Date': date.toLocaleDateString('en-IN'),
+        'Time': date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        'Item Name': e.item_name,
+        'Old Price (₹)': Number(e.old_price || 0),
+        'New Price (₹)': Number(e.new_price || 0),
+        'Price Change (₹)': diff >= 0 ? `+₹${diff}` : `-₹${Math.abs(diff)}`
+      }
+    })
+
+    const sheets = [
+      { data: inventoryData, sheetName: 'Inventory Status' },
+      { data: expenditureLog, sheetName: 'Spending Log' },
+      { data: priceLog, sheetName: 'Price Audit History' }
+    ]
+
+    downloadMultiSheetExcel(sheets, 'NGO_Monitoring_Report', {
+      title: 'NGO Monitoring Dashboard Report',
+      subtitle: `Exported Date Range: ${dateRange === '7days' ? 'Last 7 Days' : dateRange === '30days' ? 'Last 30 Days' : 'All Time'} | Generated: ${new Date().toLocaleString('en-IN')}`
+    })
+  }
+
   async function handleSaveThreshold(itemId) {
     const val = Number(editingThreshold)
     if (isNaN(val) || val < 0) return
@@ -181,7 +242,15 @@ export default function NgoDashboard() {
         </div>
         
         {/* Global Controls */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleDownloadReport}
+            className="flex items-center gap-2 rounded-lg bg-app-greenMid hover:bg-app-greenDark text-white px-3 h-[36px] text-[13px] font-semibold shadow-sm transition-colors cursor-pointer"
+          >
+            <Download size={14} />
+            <span>Download Report</span>
+          </button>
+
           <div className="flex items-center gap-2 rounded-lg border border-app-border bg-white px-3 h-[36px]">
             <Calendar size={14} className="text-app-textSecondary" />
             <select

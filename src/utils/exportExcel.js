@@ -102,23 +102,24 @@ export function downloadMultiSheetExcel(sheetsData, fileName, metadata = null) {
   const workbook = XLSX.utils.book_new()
   
   sheetsData.forEach(({ data, sheetName }) => {
-    if (data && data.length > 0) {
-      let worksheet
-      if (metadata) {
-        worksheet = XLSX.utils.json_to_sheet(data, { origin: 'A4' })
-        XLSX.utils.sheet_add_aoa(worksheet, [
-          [metadata.title || 'Export Report'],
-          [metadata.subtitle || `Generated on: ${new Date().toLocaleString()}`],
-          []
-        ], { origin: 'A1' })
-      } else {
-        worksheet = XLSX.utils.json_to_sheet(data)
-      }
-      
-      applyStylesToWorksheet(worksheet, !!metadata)
-      
-      XLSX.utils.book_append_sheet(workbook, worksheet, sheetName)
+    // Ensure we always have at least one row so the sheet is created
+    const sheetData = data && data.length > 0 ? data : [{ 'No Data': 'No records found for this period' }]
+    
+    let worksheet
+    if (metadata) {
+      worksheet = XLSX.utils.json_to_sheet(sheetData, { origin: 'A4' })
+      XLSX.utils.sheet_add_aoa(worksheet, [
+        [metadata.title || 'Export Report'],
+        [metadata.subtitle || `Generated on: ${new Date().toLocaleString()}`],
+        []
+      ], { origin: 'A1' })
+    } else {
+      worksheet = XLSX.utils.json_to_sheet(sheetData)
     }
+    
+    applyStylesToWorksheet(worksheet, !!metadata)
+    
+    XLSX.utils.book_append_sheet(workbook, worksheet, sheetName)
   })
 
   // Create timestamp string
