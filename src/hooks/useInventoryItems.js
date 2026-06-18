@@ -21,7 +21,7 @@ export function useInventoryItems() {
       .from('inventory_items')
       .select('*')
       .eq('is_active', true)
-      .order('name')
+      .order('name_en')
 
     //Only filter by school if they are school staff
     if (profile?.role === 'school_staff') {

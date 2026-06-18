@@ -8,7 +8,7 @@ import ActivityRow from '../../components/ui/ActivityRow'
 import { useCurrentStock } from '../../hooks/useCurrentStock'
 import { useAlerts } from '../../hooks/useAlerts'
 import { useActivityFeed } from '../../hooks/useActivityFeed'
-import { useRealtimeStock } from '../../hooks/useRealtimeStock'
+
 import { stockStatus } from '../../utils/stockStatus'
 import StockEntryForm from '../../components/forms/StockEntryForm'
 import UsageEntryForm from '../../components/forms/UsageEntryForm'
@@ -36,13 +36,10 @@ export default function SchoolDashboard() {
   const { entries, loading: feedLoading, refetch: refetchFeed } = useActivityFeed(100)
   const { critical, low, hasAlerts } = useAlerts(stock)
 
-  // Realtime subscription (or mock window events)
   const handleUpdate = useCallback(() => {
     refetchStock()
     refetchFeed()
   }, [refetchStock, refetchFeed])
-  
-  useRealtimeStock(handleUpdate)
 
   const handleModalSuccess = () => {
     setActiveModal(null)
@@ -51,7 +48,7 @@ export default function SchoolDashboard() {
   // Filter logic for the inventory tab
   const filteredStock = stock.filter(item => {
     const searchVal = searchQuery ? searchQuery.toLowerCase() : ''
-    const matchesSearch = item.item_name.toLowerCase().includes(searchVal)
+    const matchesSearch = (item.item_name || '').toLowerCase().includes(searchVal)
     
     const status = stockStatus(item.current_stock, item.threshold_qty)
     let matchesStatus = false
@@ -105,6 +102,7 @@ export default function SchoolDashboard() {
   
   // Filter logic for activity tab
   const filteredEntries = entries.filter((entry) => {
+    if (entry.type === 'price_update') return false // Hide price updates from school staff
     if (activityTypeFilter === 'All') return true
     if (activityTypeFilter === 'Stock') return entry.type === 'stock'
     if (activityTypeFilter === 'Usage') return entry.type === 'usage'
@@ -233,15 +231,17 @@ export default function SchoolDashboard() {
                     <tr className="border-b border-app-border bg-app-surfaceAlt text-[11px] uppercase tracking-[0.5px] text-app-textSecondary">
                       <th className="px-4 py-3 font-semibold text-left">Item</th>
                       <th className="px-4 py-3 font-semibold text-right">In Stock</th>
+                      <th className="px-4 py-3 font-semibold text-right">Threshold</th>
                     </tr>
                   </thead>
                   <tbody>
                     {stockLoading ? (
-                      <tr><td className="p-4 text-center text-app-textSecondary">Loading...</td></tr>
+                      <tr><td colSpan="3" className="p-4 text-center text-app-textSecondary">Loading...</td></tr>
                     ) : stock.map((item) => (
                       <tr key={item.item_id} className="border-b border-app-border last:border-0 hover:bg-[#fafaf9] transition-colors">
                         <td className="px-4 py-3 font-medium text-app-textPrimary">{item.item_name}</td>
                         <td className="px-4 py-3 text-right text-app-textSecondary">{item.current_stock} {item.unit}</td>
+                        <td className="px-4 py-3 text-right text-app-textSecondary">{item.threshold_qty} {item.unit}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -262,7 +262,7 @@ export default function SchoolDashboard() {
               <div className="flex flex-col flex-1">
                 {feedLoading ? (
                   <div className="p-4 text-center text-[12px] text-app-textSecondary">Loading...</div>
-                ) : entries.slice(0, 4).map((entry, idx) => (
+                ) : entries.filter(e => e.type !== 'price_update').slice(0, 4).map((entry, idx) => (
                   <ActivityRow key={`${entry.type}-${entry.id}-${idx}`} entry={entry} />
                 ))}
               </div>
@@ -461,12 +461,12 @@ export default function SchoolDashboard() {
       <StockEntryForm 
         open={activeModal === 'stock'} 
         onClose={() => setActiveModal(null)} 
-        onSuccess={handleModalSuccess} 
+        onSuccess={() => { setActiveModal(null); handleUpdate(); }} 
       />
       <UsageEntryForm 
         open={activeModal === 'usage'} 
         onClose={() => setActiveModal(null)} 
-        onSuccess={handleModalSuccess} 
+        onSuccess={() => { setActiveModal(null); handleUpdate(); }} 
       />
     </div>
   )

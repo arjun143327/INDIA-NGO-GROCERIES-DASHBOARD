@@ -4,6 +4,7 @@ import { useAuth } from './context/AuthContext'
 import Login from './pages/Login'
 import NgoDashboard from './pages/ngo/NgoDashboard'
 import SchoolDashboard from './pages/school/SchoolDashboard'
+import { ErrorBoundary } from './components/ErrorBoundary'
 
 function RequireAuth({ children }) {
   const { session, loading } = useAuth()
@@ -45,7 +46,8 @@ function RoleRedirect() {
 
 export default function App() {
   return (
-    <Routes>
+    <ErrorBoundary>
+      <Routes>
       <Route path="/login" element={<Login />} />
       <Route
         path="/"
@@ -74,5 +76,6 @@ export default function App() {
         />
       </Route>
     </Routes>
+    </ErrorBoundary>
   )
 }

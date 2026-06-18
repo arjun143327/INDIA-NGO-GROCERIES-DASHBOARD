@@ -38,7 +38,25 @@ export function useCurrentStock() {
 
   useEffect(() => {
     refetch()
-  }, [refetch])
+
+    if (!profile) return
+
+    const channel = supabase.channel(`dashboard_updates_${Math.random().toString(36).substr(2, 9)}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'inventory_items' }, () => {
+        refetch()
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'stock_entries' }, () => {
+        refetch()
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'usage_logs' }, () => {
+        refetch()
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [refetch, profile])
 
   return { stock, loading, error, refetch }
 }

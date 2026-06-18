@@ -1,18 +1,6 @@
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 
-function getSubLabel(profile) {
-  if (!profile) {
-    return 'Sign in to continue'
-  }
-
-  if (profile.role === 'ngo_admin') {
-    return 'NGO Admin - All Schools'
-  }
-
-  return `${profile.school_name ?? 'Assigned School'} - School View`
-}
-
 export default function NavBar() {
   const { profile } = useAuth()
 
@@ -40,7 +28,6 @@ export default function NavBar() {
           </div>
           <div>
             <div className="text-sm font-semibold leading-none">India NGO Grocery Tracker</div>
-            <div className="mt-1 text-[11px] text-white/80">{getSubLabel(profile)}</div>
           </div>
         </div>
 
@@ -59,7 +46,7 @@ export default function NavBar() {
           
           <button
             onClick={handleLogout}
-            className="text-xs font-semibold text-white/80 hover:text-white transition-colors"
+            className="ml-2 rounded-md border border-white/20 bg-white/10 px-3 py-1.5 text-[12px] font-medium text-white hover:bg-white/20 transition-colors"
           >
             Sign Out
           </button>

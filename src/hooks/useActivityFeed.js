@@ -8,8 +8,11 @@ function mapStockEntry(entry) {
     type: 'stock',
     qty: entry.qty_added,
     created_at: entry.created_at,
+    entry_date: entry.entry_date,
+    total_expense: entry.total_expense,
     item_name: entry.inventory_items?.name_en ?? 'Unknown item',
     unit: entry.inventory_items?.unit ?? '',
+    category: entry.inventory_items?.category ?? 'Other',
   }
 }
 
@@ -53,7 +56,7 @@ export function useActivityFeed(limit = 10) {
 
     const stockQuery = supabase
       .from('stock_entries')
-      .select('id, created_at, qty_added, inventory_items(name_en, unit)')
+      .select('id, created_at, entry_date, total_expense, qty_added, inventory_items(name_en, unit, category)')
       .order('created_at', { ascending: false })
       .limit(limit)
 
@@ -100,7 +103,25 @@ export function useActivityFeed(limit = 10) {
 
   useEffect(() => {
     refetch()
-  }, [refetch])
+
+    if (!profile) return
+
+    const channel = supabase.channel(`feed_updates_${Math.random().toString(36).substr(2, 9)}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'stock_entries' }, () => {
+        refetch()
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'usage_logs' }, () => {
+        refetch()
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'price_updates' }, () => {
+        refetch()
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [refetch, profile])
 
   return { entries, loading, error, refetch }
 }

@@ -34,7 +34,7 @@ export default function NgoDashboard() {
   const [updatingThreshold, setUpdatingThreshold] = useState(false)
 
   // Pull data from our custom hooks
-  const { stock } = useCurrentStock()
+  const { stock, refetch } = useCurrentStock()
   const { entries } = useActivityFeed(100) // Fetch more to allow meaningful date filtering
   const { critical, low, hasAlerts } = useAlerts(stock)
 
@@ -162,6 +162,7 @@ export default function NgoDashboard() {
       if (error) throw error
       setEditingItemId(null)
       setUpdatingThreshold(false)
+      refetch()
     } catch (err) {
       console.error('Failed to update threshold:', err)
       setUpdatingThreshold(false)
@@ -262,10 +263,10 @@ export default function NgoDashboard() {
                 <h2 className="text-[14px] font-semibold text-app-textPrimary">Recent Activity Log</h2>
               </div>
               <div className="flex-1 overflow-y-auto">
-                {filteredEntries.length === 0 ? (
+                {filteredEntries.filter(e => e.type !== 'price_update').length === 0 ? (
                   <p className="p-4 text-center text-[13px] text-app-textSecondary mt-8 opacity-70">No activity recorded in this period.</p>
                 ) : (
-                  filteredEntries.slice(0, 10).map((entry, idx) => (
+                  filteredEntries.filter(e => e.type !== 'price_update').slice(0, 10).map((entry, idx) => (
                     <ActivityRow key={`${entry.type}-${entry.id}-${idx}`} entry={entry} />
                   ))
                 )}

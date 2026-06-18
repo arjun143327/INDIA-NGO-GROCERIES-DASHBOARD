@@ -48,7 +48,23 @@ export default function StockEntryForm({ open, onClose, onSuccess }) {
           notes,
           created_by: profile?.id
         }
-        await supabase.from('stock_entries').insert(entry)
+        const { error: insertError } = await supabase.from('stock_entries').insert(entry)
+        if (insertError) throw insertError
+
+        // Automatically update the price in the inventory table exactly as entered
+        if (expense > 0) {
+          const exactPrice = Math.round(expense)
+          await supabase.from('inventory_items').update({ estimated_cost: exactPrice }).eq('id', item.item_id)
+          
+          // Also log it in price_updates for history
+          await supabase.from('price_updates').insert({
+            school_id: profile?.school_id,
+            item_id: item.item_id,
+            old_price: 0,
+            new_price: exactPrice,
+            updated_by: profile?.id
+          })
+        }
       }
 
       setSubmitting(false)

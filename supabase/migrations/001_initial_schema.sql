@@ -38,6 +38,7 @@ create table if not exists public.stock_entries (
   item_id uuid not null references public.inventory_items (id) on delete cascade,
   qty_added numeric not null check (qty_added > 0),
   entry_date date not null,
+  total_expense numeric default 0,
   notes text,
   created_by uuid references auth.users (id),
   created_at timestamptz not null default now()
