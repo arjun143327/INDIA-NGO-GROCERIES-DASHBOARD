@@ -1,11 +1,18 @@
 export const CATEGORIES = [
   { id: 'All', label: 'All' },
-  { id: 'Rice & grains', label: 'Rice & Grains' },
+  { id: 'Masala / Spices', label: 'Masala / Spices' },
+  { id: 'Rice Items', label: 'Rice' },
+  { id: 'Flour Items', label: 'Flour' },
+  { id: 'Milk / Health Drink', label: 'Milk / Drink' },
   { id: 'Vegetables', label: 'Vegetables' },
-  { id: 'Dal / pulses', label: 'Dal' },
-  { id: 'Spices & masala', label: 'Spices' },
-  { id: 'Dairy & protein', label: 'Dairy' },
-  { id: 'Snacks / packaged items', label: 'Snacks' }
+  { id: 'Snacks / Side Items', label: 'Snacks' },
+  { id: 'Dal / Pulses', label: 'Dal' },
+  { id: 'Oil / Ghee', label: 'Oil / Ghee' },
+  { id: 'Sweet Items', label: 'Sweets' },
+  { id: 'Other Items', label: 'Others' },
+  { id: 'Greens / Leaves', label: 'Greens' },
+  { id: 'Fruits', label: 'Fruits' },
+  { id: 'Non-Veg Items', label: 'Non-Veg' }
 ]
 
 export default function CategoryChips({ selectedCategory, onSelectCategory }) {

@@ -8,7 +8,7 @@ export default function NewItemForm({ open, onClose, onSuccess }) {
   const isSchoolStaff = profile?.role === 'school_staff'
   const [nameEn, setNameEn] = useState('')
   const [nameTa, setNameTa] = useState('')
-  const [category, setCategory] = useState('Household / utility')
+  const [category, setCategory] = useState('Masala / Spices')
   const [unit, setUnit] = useState('kg')
   const [threshold, setThreshold] = useState('0') // Default to 0
   const [submitting, setSubmitting] = useState(false)
@@ -47,7 +47,7 @@ export default function NewItemForm({ open, onClose, onSuccess }) {
   function reset() {
     setNameEn('')
     setNameTa('')
-    setCategory('Household / utility')
+    setCategory('Masala / Spices')
     setThreshold('0')
   }
 
@@ -99,14 +99,19 @@ export default function NewItemForm({ open, onClose, onSuccess }) {
                 onChange={(e) => setCategory(e.target.value)}
                 className="h-[36px] w-full rounded-[6px] border border-app-border bg-white px-3 text-[13px] text-app-textPrimary focus:border-app-greenMid focus:outline-none"
               >
-                <option value="Rice & grains">Rice & grains</option>
-                <option value="Dal / pulses">Dal / pulses</option>
-                <option value="Spices & masala">Spices & masala</option>
-                <option value="Oils & fats">Oils & fats</option>
+                <option value="Masala / Spices">Masala / Spices</option>
+                <option value="Rice Items">Rice Items</option>
+                <option value="Flour Items">Flour Items</option>
+                <option value="Milk / Health Drink">Milk / Health Drink</option>
                 <option value="Vegetables">Vegetables</option>
-                <option value="Dairy & protein">Dairy & protein</option>
-                <option value="Snacks / packaged items">Snacks / packaged items</option>
-                <option value="Household / utility">Household / utility</option>
+                <option value="Snacks / Side Items">Snacks / Side Items</option>
+                <option value="Dal / Pulses">Dal / Pulses</option>
+                <option value="Oil / Ghee">Oil / Ghee</option>
+                <option value="Sweet Items">Sweet Items</option>
+                <option value="Other Items">Other Items</option>
+                <option value="Greens / Leaves">Greens / Leaves</option>
+                <option value="Fruits">Fruits</option>
+                <option value="Non-Veg Items">Non-Veg Items</option>
               </select>
             </div>
             <div className="flex-1">

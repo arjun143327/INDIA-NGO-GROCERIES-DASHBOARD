@@ -6,6 +6,7 @@ import { useCurrentStock } from '../../hooks/useCurrentStock'
 import { Trash2, Plus } from 'lucide-react'
 import SearchableDropdown from '../ui/SearchableDropdown'
 import CategoryChips from '../ui/CategoryChips'
+import { getUsageConversion } from '../../utils/unitConversion'
 
 export default function UsageEntryForm({ open, onClose, onSuccess }) {
   const { profile } = useAuth()
@@ -46,15 +47,21 @@ export default function UsageEntryForm({ open, onClose, onSuccess }) {
     setSubmitting(true)
     setError('')
 
-    const logs = items.map(item => ({
-      school_id: profile?.school_id,
-      item_id: item.item_id,
-      qty_used: Number(item.quantity),
-      used_on: date,
-      meal_type: mealType,
-      notes,
-      created_by: profile?.id
-    }))
+    const logs = items.map(item => {
+      const selectedStockItem = stock.find(s => s.item_id === item.item_id)
+      const { factor } = getUsageConversion(selectedStockItem?.item_name, selectedStockItem?.unit)
+      
+      return {
+        school_id: profile?.school_id,
+        item_id: item.item_id,
+        // Convert the entered usage quantity back to the base inventory unit before saving
+        qty_used: Number(item.quantity) / factor,
+        used_on: date,
+        meal_type: mealType,
+        notes,
+        created_by: profile?.id
+      }
+    })
 
     try {
       const { error: insertError } = await supabase.from('usage_logs').insert(logs)
@@ -127,7 +134,8 @@ export default function UsageEntryForm({ open, onClose, onSuccess }) {
             <div className="space-y-2 px-1 -mx-1">
             {items.map((item, index) => {
               const selectedStockItem = stock.find(s => s.item_id === item.item_id)
-              const warning = selectedStockItem && Number(item.quantity) > selectedStockItem.current_stock
+              const { usageUnit, factor } = getUsageConversion(selectedStockItem?.item_name, selectedStockItem?.unit)
+              const warning = selectedStockItem && (Number(item.quantity) / factor) > selectedStockItem.current_stock
               const hasError = warning || (item.quantity && Number(item.quantity) <= 0)
               
               return (
@@ -159,11 +167,11 @@ export default function UsageEntryForm({ open, onClose, onSuccess }) {
                           value={item.quantity}
                           onChange={(e) => updateItem(item.id, 'quantity', e.target.value)}
                           placeholder="Qty"
-                          className={`h-[34px] w-full rounded-[6px] border ${hasError ? 'border-app-amber/40 bg-[#fffcf9]' : 'border-app-border bg-white'} pl-3 pr-[50px] text-[12px] text-app-textPrimary focus:border-app-greenMid focus:outline-none`}
+                          className={`h-[34px] w-full rounded-[6px] border ${hasError ? 'border-app-amber/40 bg-[#fffcf9]' : 'border-app-border bg-white'} pl-3 pr-[65px] text-[12px] text-app-textPrimary focus:border-app-greenMid focus:outline-none`}
                         />
                         {selectedStockItem && (
                           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-medium text-app-textSecondary">
-                            {selectedStockItem.unit}
+                            {usageUnit}
                           </span>
                         )}
                       </div>
@@ -183,7 +191,7 @@ export default function UsageEntryForm({ open, onClose, onSuccess }) {
                   
                   {warning && (
                     <p className="mt-2 text-[11px] font-medium text-app-amber flex items-center gap-1">
-                      <span>⚠</span> Exceeds stock (Available: {selectedStockItem.current_stock} {selectedStockItem.unit})
+                      <span>⚠</span> Exceeds stock (Available: {selectedStockItem.current_stock * factor} {usageUnit})
                     </p>
                   )}
                 </div>

@@ -1,4 +1,5 @@
 import { formatQty, relativeDate } from '../../utils/formatters'
+import { getUsageConversion } from '../../utils/unitConversion'
 
 export default function ActivityRow({ entry }) {
   const isStock = entry.type === 'stock'
@@ -19,7 +20,8 @@ export default function ActivityRow({ entry }) {
     iconColor = 'bg-app-amber'
     textColor = 'text-app-amber'
     label = entry.meal_type ? `Daily Usage • ${entry.meal_type}` : 'Daily Usage'
-    valueDisplay = `-${formatQty(entry.qty)} ${entry.unit}`
+    const { usageUnit, factor } = getUsageConversion(entry.item_name, entry.unit)
+    valueDisplay = `-${formatQty(entry.qty * factor)} ${usageUnit}`
   } else if (isPriceUpdate) {
     iconColor = 'bg-blue-500'
     textColor = 'text-blue-600'
