@@ -106,7 +106,7 @@ export function useActivityFeed(limit = 10, schoolId = null) {
     setError(null)
     setEntries(merged)
     setLoading(false)
-  }, [limit, profile])
+  }, [limit, profile, schoolId])
 
   useEffect(() => {
     refetch()

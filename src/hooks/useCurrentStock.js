@@ -36,7 +36,7 @@ export function useCurrentStock(schoolId = null) {
     }
 
     setLoading(false)
-  }, [profile])
+  }, [profile, schoolId])
 
   useEffect(() => {
     refetch()
