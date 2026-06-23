@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 
-export function useCurrentStock() {
+export function useCurrentStock(schoolId = null) {
   const { profile } = useAuth()
   const [stock, setStock] = useState([])
   const [loading, setLoading] = useState(true)
@@ -21,6 +21,8 @@ export function useCurrentStock() {
 
     if (profile.role === 'school_staff') {
       query = query.eq('school_id', profile.school_id)
+    } else if (schoolId) {
+      query = query.eq('school_id', schoolId)
     }
 
     const { data, error: nextError } = await query

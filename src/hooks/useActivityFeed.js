@@ -39,7 +39,7 @@ function mapPriceUpdateEntry(entry) {
   }
 }
 
-export function useActivityFeed(limit = 10) {
+export function useActivityFeed(limit = 10, schoolId = null) {
   const { profile } = useAuth()
   const [entries, setEntries] = useState([])
   const [loading, setLoading] = useState(true)
@@ -72,12 +72,19 @@ export function useActivityFeed(limit = 10) {
       .order('created_at', { ascending: false })
       .limit(limit)
 
-    const scopedStockQuery =
-      profile.role === 'school_staff' ? stockQuery.eq('school_id', profile.school_id) : stockQuery
-    const scopedUsageQuery =
-      profile.role === 'school_staff' ? usageQuery.eq('school_id', profile.school_id) : usageQuery
-    const scopedPriceQuery =
-      profile.role === 'school_staff' ? priceQuery.eq('school_id', profile.school_id) : priceQuery
+    let scopedStockQuery = stockQuery
+    let scopedUsageQuery = usageQuery
+    let scopedPriceQuery = priceQuery
+
+    if (profile.role === 'school_staff') {
+      scopedStockQuery = stockQuery.eq('school_id', profile.school_id)
+      scopedUsageQuery = usageQuery.eq('school_id', profile.school_id)
+      scopedPriceQuery = priceQuery.eq('school_id', profile.school_id)
+    } else if (schoolId) {
+      scopedStockQuery = stockQuery.eq('school_id', schoolId)
+      scopedUsageQuery = usageQuery.eq('school_id', schoolId)
+      scopedPriceQuery = priceQuery.eq('school_id', schoolId)
+    }
 
     const [stockResponse, usageResponse, priceResponse] = await Promise.all([scopedStockQuery, scopedUsageQuery, scopedPriceQuery])
 

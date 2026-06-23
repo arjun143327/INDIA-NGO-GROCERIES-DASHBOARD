@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import LiveDot from '../../components/ui/LiveDot'
 import StatCard from '../../components/ui/StatCard'
 import AlertStrip from '../../components/ui/AlertStrip'
@@ -34,9 +34,26 @@ export default function NgoDashboard() {
   const [editingThreshold, setEditingThreshold] = useState('')
   const [updatingThreshold, setUpdatingThreshold] = useState(false)
 
-  // Pull data from our custom hooks
-  const { stock, refetch } = useCurrentStock()
-  const { entries } = useActivityFeed(100) // Fetch more to allow meaningful date filtering
+  // Multi-School State
+  const [schools, setSchools] = useState([])
+  const [selectedSchoolId, setSelectedSchoolId] = useState(null)
+
+  // Fetch schools on mount
+  useEffect(() => {
+    async function loadSchools() {
+      const { data } = await supabase.from('schools').select('id, name').order('name')
+      if (data && data.length > 0) {
+        setSchools(data)
+        // Default to first school
+        setSelectedSchoolId(data[0].id)
+      }
+    }
+    loadSchools()
+  }, [])
+
+  // Pull data from our custom hooks using the selected school
+  const { stock, refetch } = useCurrentStock(selectedSchoolId)
+  const { entries } = useActivityFeed(100, selectedSchoolId) // Fetch more to allow meaningful date filtering
   const { critical, low, hasAlerts } = useAlerts(stock)
 
   // --- DATA AGGREGATION & FILTERING ---
@@ -243,6 +260,18 @@ export default function NgoDashboard() {
         
         {/* Global Controls */}
         <div className="flex items-center gap-3">
+          {schools.length > 0 && (
+            <select
+              value={selectedSchoolId || ''}
+              onChange={(e) => setSelectedSchoolId(e.target.value)}
+              className="h-[36px] rounded-lg border border-app-border bg-white px-3 py-0 text-[13px] font-semibold text-app-textPrimary shadow-sm focus:border-app-greenMid focus:outline-none focus:ring-1 focus:ring-app-greenMid cursor-pointer"
+            >
+              {schools.map(s => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </select>
+          )}
+
           <button
             onClick={handleDownloadReport}
             className="flex items-center gap-2 rounded-lg bg-app-greenMid hover:bg-app-greenDark text-white px-3 h-[36px] text-[13px] font-semibold shadow-sm transition-colors cursor-pointer"
