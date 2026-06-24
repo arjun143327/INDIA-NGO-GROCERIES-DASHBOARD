@@ -83,7 +83,10 @@ select
   i.id as item_id,
   i.name_en,
   i.name_ta,
-  i.name_en || ' (' || i.name_ta || ')' as item_name,
+  case 
+    when i.name_ta is null or i.name_ta = '' then i.name_en 
+    else i.name_en || ' (' || i.name_ta || ')' 
+  end as item_name,
   i.category,
   i.unit,
   i.image_url,
