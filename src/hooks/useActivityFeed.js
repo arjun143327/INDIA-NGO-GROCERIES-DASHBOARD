@@ -36,6 +36,7 @@ function mapPriceUpdateEntry(entry) {
     new_price: entry.new_price,
     created_at: entry.created_at,
     item_name: entry.inventory_items?.name_en ?? 'Unknown item',
+    category: entry.inventory_items?.category ?? 'Other',
   }
 }
 
@@ -68,7 +69,7 @@ export function useActivityFeed(limit = 10, schoolId = null) {
 
     const priceQuery = supabase
       .from('price_updates')
-      .select('id, created_at, old_price, new_price, inventory_items(name_en)')
+      .select('id, created_at, old_price, new_price, inventory_items(name_en, category)')
       .order('created_at', { ascending: false })
       .limit(limit)
 

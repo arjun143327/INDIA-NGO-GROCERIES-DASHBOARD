@@ -118,12 +118,14 @@ export default function NgoDashboard() {
     return { dailyChart, itemChart }
   }, [filteredEntries])
 
-  // 4. Expenditure Aggregation from stock_entries
+  // 4. Expenditure Aggregation from stock_entries and price_updates
   const expenditureData = useMemo(() => {
     const stockEntries = filteredEntries.filter(e => e.type === 'stock')
+    const priceUpdates = filteredEntries.filter(e => e.type === 'price_update')
 
-    // Total spend in period
-    const totalSpend = stockEntries.reduce((sum, e) => sum + (Number(e.total_expense) || 0), 0)
+    // Total spend in period (Base restocks + Net price audit adjustments)
+    let totalSpend = stockEntries.reduce((sum, e) => sum + (Number(e.total_expense) || 0), 0)
+    totalSpend += priceUpdates.reduce((sum, p) => sum + (Number(p.new_price) - Number(p.old_price || 0)), 0)
 
     // Spending by item
     const byItemMap = stockEntries.reduce((acc, e) => {
@@ -132,6 +134,13 @@ export default function NgoDashboard() {
       acc[name].spend += Number(e.total_expense) || 0
       return acc
     }, {})
+    
+    priceUpdates.forEach(p => {
+      const name = p.item_name || 'Unknown'
+      if (!byItemMap[name]) byItemMap[name] = { name, spend: 0 }
+      byItemMap[name].spend += (Number(p.new_price) - Number(p.old_price || 0))
+    })
+    
     const byItem = Object.values(byItemMap).filter(i => i.spend > 0).sort((a, b) => b.spend - a.spend).slice(0, 8)
 
     // Spending by category
@@ -141,6 +150,13 @@ export default function NgoDashboard() {
       acc[cat].spend += Number(e.total_expense) || 0
       return acc
     }, {})
+    
+    priceUpdates.forEach(p => {
+      const cat = p.category || 'Other'
+      if (!byCategoryMap[cat]) byCategoryMap[cat] = { name: cat, spend: 0 }
+      byCategoryMap[cat].spend += (Number(p.new_price) - Number(p.old_price || 0))
+    })
+    
     const byCategory = Object.values(byCategoryMap).filter(c => c.spend > 0).sort((a, b) => b.spend - a.spend)
 
     // Spending by date (monthly)
@@ -150,6 +166,13 @@ export default function NgoDashboard() {
       acc[date].spend += Number(e.total_expense) || 0
       return acc
     }, {})
+    
+    priceUpdates.forEach(p => {
+      const date = (p.created_at || '').split('T')[0]
+      if (!byDateMap[date]) byDateMap[date] = { date, spend: 0 }
+      byDateMap[date].spend += (Number(p.new_price) - Number(p.old_price || 0))
+    })
+    
     const byDate = Object.values(byDateMap).filter(d => d.spend > 0).sort((a, b) => new Date(a.date) - new Date(b.date))
 
     return { totalSpend, byItem, byCategory, byDate }
