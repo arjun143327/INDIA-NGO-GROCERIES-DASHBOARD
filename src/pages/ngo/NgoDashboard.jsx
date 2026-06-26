@@ -121,7 +121,7 @@ export default function NgoDashboard() {
   // 4. Expenditure Aggregation from stock_entries and price_updates
   const expenditureData = useMemo(() => {
     const stockEntries = filteredEntries.filter(e => e.type === 'stock')
-    const priceUpdates = filteredEntries.filter(e => e.type === 'price_update')
+    const priceUpdates = filteredEntries.filter(e => e.type === 'price_update' && Number(e.old_price) > 0)
 
     // Total spend in period (Base restocks + Net price audit adjustments)
     let totalSpend = stockEntries.reduce((sum, e) => sum + (Number(e.total_expense) || 0), 0)
