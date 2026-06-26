@@ -50,7 +50,7 @@ create table if not exists public.usage_logs (
   item_id uuid not null references public.inventory_items (id) on delete cascade,
   qty_used numeric not null check (qty_used > 0),
   used_on date not null,
-  meal_type text check (meal_type in ('Breakfast', 'Lunch', 'Snack')),
+  meal_type text check (meal_type in ('Breakfast', 'Lunch', 'Snack', 'Dinner')),
   notes text,
   created_by uuid references auth.users (id),
   created_at timestamptz not null default now()
