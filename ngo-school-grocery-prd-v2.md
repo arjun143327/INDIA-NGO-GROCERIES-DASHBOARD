@@ -1,5 +1,5 @@
 # Product Requirements Document: NGO School Grocery Usage Dashboard
-**Version:** 2.0  
+**Version:** 3.0 (Multi-Tenant Release)
 **Project:** India NGO — School Grocery Management System  
 **Stack:** React + Supabase + Vercel  
 **Prepared by:** Intern (with AI assistance)
@@ -28,9 +28,10 @@ The NGO needs a way to see what the school is consuming, what is running low, an
 
 - Give school staff a simple workflow to add stock and record daily usage.
 - Give the NGO a live dashboard with current stock, item-wise consumption, and low-stock alerts.
-- Ensure users only access data they are allowed to see through database-level access control (RLS).
-- Keep the MVP low-cost and deployable on free tiers during the pilot phase.
-- Provide visual charts so the NGO admin can make informed decisions about fund allocation and grocery procurement.
+- **Multi-Tenancy Support:** Allow the NGO to manage multiple schools/centers (e.g., KGBV Thally, Triplicane Shelter) from a single platform while strictly isolating data so staff only see their own center.
+- Ensure users only access data they are allowed to see through robust database-level access control (RLS).
+- Provide visual charts and automated expenditure tracking so the NGO admin can make informed decisions about fund allocation and grocery procurement.
+- Enable Excel/PDF report generation for inventory, spending, and audits.
 
 ---
 
@@ -38,11 +39,10 @@ The NGO needs a way to see what the school is consuming, what is running low, an
 
 The MVP will not include:
 - Purchase approvals or vendor management
-- Accounting, invoice uploads, or cost tracking
+- Full-scale accounting system (only basic expenditure tracking is included)
 - Offline sync
 - Predictive analytics or AI-based suggestions
 - Mobile apps (desktop browser only for now)
-- Multi-school support (single school in scope for MVP)
 
 These can be considered after the core stock-and-usage workflow is stable in real usage.
 
@@ -50,32 +50,31 @@ These can be considered after the core stock-and-usage workflow is stable in rea
 
 ## 5. Users and Roles
 
-### 5.1 School Staff
-School staff are responsible for entering groceries received and logging daily consumption. They should only be able to create and view records for their own school. The interface must be simple enough for non-technical users — no training required.
+### 5.1 School Staff (and Shelter Staff)
+School staff are responsible for entering groceries received and logging daily consumption. Through strict Row Level Security (RLS), they can only access, create, and view records for their specific assigned center. The interface is highly simplified for non-technical users. They cannot alter critical admin settings (like low-stock thresholds).
 
 ### 5.2 NGO Admin
-NGO admins need visibility into stock position, low-stock alerts, refill needs, historical usage, and visual trend charts. They should be able to view records across the school under management and manage master item settings.
+NGO admins need visibility into stock position, low-stock alerts, refill needs, historical usage, and expenditure trends across all operating centers. They have access to a Global Center Switcher to toggle their view between different schools/shelters. They hold exclusive permissions to manage the master item catalog, set threshold quantities, and perform price audits.
 
 ---
 
 ## 6. User Stories
 
-### School Staff
+### School Staff (and Shelter Staff)
 - As a school staff member, I want to log groceries received so the system knows what stock came in.
 - As a school staff member, I want to add new grocery items to the system if a new item is introduced.
 - As a school staff member, I want to enter daily usage for items such as rice, oil, and vegetables so the stock balance stays updated.
 - As a school staff member, I want to add multiple grocery items in a single daily usage submission so I don't have to submit one at a time.
-- As a school staff member, I want to see a confirmation screen after I submit so I know the data was saved.
 - As a school staff member, I want to see recent entries so I can confirm what was recorded.
 
 ### NGO Admin
 - As an NGO admin, I want to see current stock levels so I can understand whether the kitchen has enough supplies.
 - As an NGO admin, I want to see low-stock and critical-stock alerts highlighted at the top of my dashboard so I know what needs refill immediately.
+- As an NGO admin, I want to switch between different schools/shelters using a dropdown to monitor operations individually.
+- As an NGO admin, I want to track Total Spend for restocked items and dynamically correct prices via a Master Catalog inline editor.
+- As an NGO admin, I want to download multi-sheet Excel reports (Inventory Status, Spending Log, Price Audits) for external reporting.
 - As an NGO admin, I want the dashboard to update in real-time when the school logs new usage or stock so I do not depend on manual refresh or phone follow-up.
-- As an NGO admin, I want to see a line chart of daily usage trends so I can understand if consumption is increasing or decreasing.
-- As an NGO admin, I want to see a horizontal bar chart of today's usage so I can compare items at a glance.
-- As an NGO admin, I want to see a donut chart summarising how many items are in good, medium, or critical stock so I get a quick health overview.
-- As an NGO admin, I want to see a grouped bar chart comparing this month vs last month usage so I can plan procurement and budget.
+- As an NGO admin, I want to see charts for daily usage trends, today's usage, stock health, and monthly comparisons.
 - As an NGO admin, I want to filter usage history by date range (last 7 days, last 30 days, or custom) so I can review any period I need.
 
 ---
@@ -97,7 +96,7 @@ NGO admins need visibility into stock position, low-stock alerts, refill needs, 
 ### 7.3 Item Master (Grocery Items)
 - NGO admin or school staff can maintain a list of grocery items.
 - Each item must include: item name, unit (kg / litres / count), low-stock threshold quantity, active status, and school association.
-- Items can be added from the NGO admin settings page or from the school staff "Add / Restock" tab.
+- Items can be added from the school staff "Inventory" tab.
 - Items can be disabled (soft delete) so historical records are not broken.
 
 ### 7.4 Stock Entry (Restocking)
@@ -106,11 +105,9 @@ NGO admins need visibility into stock position, low-stock alerts, refill needs, 
 - Multiple stock entries can be added in a single session.
 
 ### 7.5 Daily Usage Entry
-- School staff log daily consumption via the "Daily usage" tab.
-- Each usage log must include: item selected from dropdown, quantity used, unit (auto-filled), date (defaults to today), and optional note.
+- School staff log daily consumption via the "Log Daily Usage" modal.
+- Each usage log must include: item selected from dropdown, quantity used, unit (auto-filled), date (defaults to today), meal type, and optional note.
 - Staff can add multiple items in one submission using an "Add another item" button before submitting.
-- On submit, a confirmation screen shows a summary of what was recorded.
-- The system should flag if today's entry is pending or complete on the school dashboard home.
 
 ### 7.6 Current Stock Calculation
 - Current stock per item = total stock added minus total usage logged.
@@ -171,25 +168,25 @@ Charts are built using Recharts (React library). Color conventions: blue for cur
 ### Shared
 - Login page (split layout: branding left, form right)
 
-### School App (sidebar navigation)
-- Home dashboard — today's submission status, recent entries, "Add Today's Usage" button
-- Daily usage tab — multi-item form, submit button, confirmation screen
-- Add / Restock tab — record new stock received, add new grocery item
+### School App (Tab Navigation)
+- Global Actions: "Record Incoming Stock" and "Log Daily Usage" modals available from all tabs.
+- Overview Tab — stat cards (Total Items, Low Stock, Critical), critical alerts, and inventory preview.
+- Inventory Tab — full list of grocery items with search and filter, and "Add New Item" button.
+- Activity Tab — recent history of stock entries and usage logs with export functionality.
 
-### NGO App (sidebar navigation)
-- Main dashboard — alert banner, metric cards, today's usage table
-- Stock levels page — progress bars, color indicators, full item list
-- Usage history page — date filter, usage log table, all four charts
-- Manage grocery items page — add / edit items, set thresholds, enable or disable items
+### NGO App (Tab Navigation)
+- Global Actions: Center Switcher dropdown (All Centers, KGBV Thally, Triplicane Shelter, etc.).
+- Global Overview Tab — alert banner, metric cards, total spend, daily/item usage charts, recent activity log, and real-time price audit feed.
+- Master Catalog Tab — bilingual catalog list, status/category filters, inline editor for thresholds and prices, and "Download Report" button (Excel multi-sheet).
 
 ---
 
 ## 9. UI and Design Requirements
 
-- Desktop web app only (Chrome browser on school and NGO computers)
+- Desktop web app with basic responsive styling (Tailwind grids/flex)
 - English language throughout
 - Simple and clean — suitable for non-technical users with no training required
-- Sidebar navigation for both school and NGO interfaces
+- Tab-based navigation for both school and NGO interfaces
 - Color scheme: dark navy blue (#042C53) for branding, red for alerts, green for good stock, amber for medium stock
 - Left side of login page shows India NGO logo and branding; right side shows the login form
 - No mobile layout required in MVP
@@ -260,13 +257,24 @@ Charts are built using Recharts (React library). Color conventions: blue for cur
 | item_id | uuid | Foreign key to inventory_items |
 | qty_used | numeric | Quantity consumed |
 | used_on | date | Date of usage (defaults to today) |
-| meal_type | text | Optional (breakfast, lunch, dinner) |
+| meal_type | text | Check constraint ('Breakfast', 'Lunch', 'Snack', 'Dinner') |
 | notes | text | Optional |
 | created_by | uuid | Foreign key to profiles |
 | created_at | timestamp | Auto-set |
 
+### `price_updates`
+| Column | Type | Notes |
+|---|---|---|
+| id | uuid | Primary key |
+| school_id | uuid | Foreign key to schools |
+| item_id | uuid | Foreign key to inventory_items |
+| old_price | numeric | Previous estimated cost |
+| new_price | numeric | New estimated cost |
+| updated_by | uuid | Foreign key to profiles |
+| created_at | timestamp | Auto-set |
+
 ### `current_stock_view` (SQL view)
-A Postgres view that computes current stock per item:
+A Postgres view that computes current stock per item, configured with `security_invoker = true` to respect RLS:
 ```sql
 current_stock = SUM(stock_entries.qty_added) - SUM(usage_logs.qty_used)
 ```
@@ -321,7 +329,6 @@ Subscriptions needed on the NGO dashboard:
 - Data entry forms must be operable without any technical training.
 - Dropdowns for grocery items should be pre-loaded so staff never type item names manually.
 - The NGO dashboard must prioritise low-stock visibility and latest activity above all else.
-- Confirmation screens after form submission are required to reduce re-entry errors.
 
 ---
 
@@ -396,7 +403,6 @@ Real-time updates depend on both the school and NGO having active internet conne
 - A school staff user can log in and reach only the school interface.
 - A school staff user can add stock entries for their assigned school only.
 - A school staff user can log daily usage for multiple items in a single submission.
-- A school staff user sees a confirmation screen after every successful submission.
 - An NGO admin can log in and reach the NGO dashboard.
 - An NGO admin can see current stock balance, low-stock alerts, usage history, and all four chart types.
 - The NGO dashboard reflects school-side submissions in near real-time without a manual page refresh.
@@ -419,9 +425,7 @@ Real-time updates depend on both the school and NGO having active internet conne
 ## 20. Future Considerations (Post-MVP)
 
 - Email or WhatsApp alerts when stock goes critical
-- Budget and cost tracking per grocery item
-- Multi-school support for NGOs managing more than one school
-- PDF or Excel export of monthly reports
+- Budget and cost tracking per grocery item (Basic expenditure tracking is already implemented)
 - Mobile-friendly layout
 - Offline data entry with sync when internet is restored
 - Predictive stock forecasting based on usage history
