@@ -45,7 +45,10 @@ export default function ActivityRow({ entry }) {
             {label}
           </span>
         </div>
-        <div className="mt-0.5 text-[12px] text-app-textSecondary">{relativeDate(entry.date || entry.created_at)}</div>
+        <div className="mt-0.5 text-[12px] text-app-textSecondary truncate">
+          {relativeDate(entry.date || entry.created_at)}
+          {entry.notes && <span className="opacity-80"> | {entry.notes}</span>}
+        </div>
       </div>
       
       <div className={`text-[14px] font-bold ${textColor}`}>

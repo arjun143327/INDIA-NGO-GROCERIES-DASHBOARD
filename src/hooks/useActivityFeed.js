@@ -11,6 +11,7 @@ function mapStockEntry(entry) {
     entry_date: entry.entry_date,
     date: entry.entry_date,
     total_expense: entry.total_expense,
+    notes: entry.notes,
     item_name: entry.inventory_items?.name_en ?? 'Unknown item',
     unit: entry.inventory_items?.unit ?? '',
     category: entry.inventory_items?.category ?? 'Other',
@@ -24,6 +25,7 @@ function mapUsageEntry(entry) {
     qty: entry.qty_used,
     created_at: entry.created_at,
     date: entry.used_on,
+    notes: entry.notes,
     item_name: entry.inventory_items?.name_en ?? 'Unknown item',
     unit: entry.inventory_items?.unit ?? '',
     meal_type: entry.meal_type,
@@ -60,13 +62,13 @@ export function useActivityFeed(limit = 10, schoolId = null) {
 
     const stockQuery = supabase
       .from('stock_entries')
-      .select('id, created_at, entry_date, total_expense, qty_added, inventory_items(name_en, unit, category)')
+      .select('id, created_at, entry_date, notes, total_expense, qty_added, inventory_items(name_en, unit, category)')
       .order('created_at', { ascending: false })
       .limit(limit)
 
     const usageQuery = supabase
       .from('usage_logs')
-      .select('id, created_at, used_on, qty_used, meal_type, inventory_items(name_en, unit)')
+      .select('id, created_at, used_on, notes, qty_used, meal_type, inventory_items(name_en, unit)')
       .order('created_at', { ascending: false })
       .limit(limit)
 
