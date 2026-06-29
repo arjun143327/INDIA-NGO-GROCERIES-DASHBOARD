@@ -62,7 +62,7 @@ export default function NgoDashboard() {
   const filteredEntries = useMemo(() => {
     return entries.filter(e => {
       if (dateRange === 'all') return true
-      const logDate = new Date(e.created_at)
+      const logDate = new Date(e.date || e.created_at)
       const todayDate = new Date()
       const diffTime = Math.abs(todayDate - logDate)
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
@@ -218,7 +218,8 @@ export default function NgoDashboard() {
         'Category': e.category,
         'Quantity Added': Number(e.qty),
         'Unit': e.unit,
-        'Total Spend (₹)': Number(e.total_expense || 0)
+        'Total Spend (₹)': Number(e.total_expense || 0),
+        'Notes': e.notes || ''
       }
     })
 

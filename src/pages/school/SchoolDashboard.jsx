@@ -133,7 +133,8 @@ export default function SchoolDashboard() {
         'Quantity': `${entry.qty} ${entry.unit}`,
         'Date': date.toLocaleDateString('en-IN'),
         'Time': date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        ...(isUsage ? { 'Meal Type': entry.meal_type || 'N/A' } : {})
+        ...(isUsage ? { 'Meal Type': entry.meal_type || 'N/A' } : {}),
+        'Notes': entry.notes || ''
       }
     })
 
