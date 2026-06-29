@@ -22,6 +22,7 @@ function mapUsageEntry(entry) {
     type: 'usage',
     qty: entry.qty_used,
     created_at: entry.created_at,
+    date: entry.used_on,
     item_name: entry.inventory_items?.name_en ?? 'Unknown item',
     unit: entry.inventory_items?.unit ?? '',
     meal_type: entry.meal_type,
@@ -35,6 +36,7 @@ function mapPriceUpdateEntry(entry) {
     old_price: entry.old_price,
     new_price: entry.new_price,
     created_at: entry.created_at,
+    date: entry.created_at,
     item_name: entry.inventory_items?.name_en ?? 'Unknown item',
     category: entry.inventory_items?.category ?? 'Other',
   }
@@ -63,7 +65,7 @@ export function useActivityFeed(limit = 10, schoolId = null) {
 
     const usageQuery = supabase
       .from('usage_logs')
-      .select('id, created_at, qty_used, meal_type, inventory_items(name_en, unit)')
+      .select('id, created_at, used_on, qty_used, meal_type, inventory_items(name_en, unit)')
       .order('created_at', { ascending: false })
       .limit(limit)
 

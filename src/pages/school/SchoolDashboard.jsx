@@ -125,13 +125,13 @@ export default function SchoolDashboard() {
 
   const handleExportActivity = (dataToExport, title, filename) => {
     const formattedData = dataToExport.map(entry => {
-      const date = new Date(entry.created_at)
+      const date = new Date(entry.date || entry.created_at)
       const isUsage = entry.type === 'usage'
       return {
         'Activity Type': isUsage ? 'Daily Usage' : 'Incoming Stock',
         'Item Name': entry.item_name,
         'Quantity': `${entry.qty} ${entry.unit}`,
-        'Date': date.toLocaleDateString(),
+        'Date': date.toLocaleDateString('en-IN'),
         'Time': date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         ...(isUsage ? { 'Meal Type': entry.meal_type || 'N/A' } : {})
       }

@@ -100,7 +100,7 @@ export default function NgoDashboard() {
 
     // Daily consumption trend
     const dailyDataMap = usageLogs.reduce((acc, log) => {
-      const date = log.created_at.split('T')[0]
+      const date = (log.date || log.created_at).split('T')[0]
       if (!acc[date]) acc[date] = { date, Total: 0 }
       acc[date].Total += Number(log.qty)
       return acc
@@ -161,14 +161,14 @@ export default function NgoDashboard() {
 
     // Spending by date (monthly)
     const byDateMap = stockEntries.reduce((acc, e) => {
-      const date = (e.entry_date || e.created_at || '').split('T')[0]
+      const date = (e.date || e.created_at || '').split('T')[0]
       if (!acc[date]) acc[date] = { date, spend: 0 }
       acc[date].spend += Number(e.total_expense) || 0
       return acc
     }, {})
     
     priceUpdates.forEach(p => {
-      const date = (p.created_at || '').split('T')[0]
+      const date = (p.date || p.created_at || '').split('T')[0]
       if (!byDateMap[date]) byDateMap[date] = { date, spend: 0 }
       byDateMap[date].spend += (Number(p.new_price) - Number(p.old_price || 0))
     })
@@ -211,7 +211,7 @@ export default function NgoDashboard() {
     // 2. Prepare Expenditure/Spending Log Sheet
     const stockEntries = filteredEntries.filter(e => e.type === 'stock')
     const expenditureLog = stockEntries.map(e => {
-      const date = new Date(e.entry_date || e.created_at)
+      const date = new Date(e.date || e.created_at)
       return {
         'Date': date.toLocaleDateString('en-IN'),
         'Item Name': e.item_name,
@@ -225,7 +225,7 @@ export default function NgoDashboard() {
     // 3. Prepare Price Audit History Sheet
     const priceUpdates = filteredEntries.filter(e => e.type === 'price_update')
     const priceLog = priceUpdates.map(e => {
-      const date = new Date(e.created_at)
+      const date = new Date(e.date || e.created_at)
       const diff = Number(e.new_price || 0) - Number(e.old_price || 0)
       return {
         'Date': date.toLocaleDateString('en-IN'),
