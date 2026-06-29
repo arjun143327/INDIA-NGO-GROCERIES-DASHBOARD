@@ -9,6 +9,7 @@ function mapStockEntry(entry) {
     qty: entry.qty_added,
     created_at: entry.created_at,
     entry_date: entry.entry_date,
+    date: entry.entry_date,
     total_expense: entry.total_expense,
     item_name: entry.inventory_items?.name_en ?? 'Unknown item',
     unit: entry.inventory_items?.unit ?? '',

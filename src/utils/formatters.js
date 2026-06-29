@@ -1,10 +1,16 @@
 export function relativeDate(isoString) {
-  const date = new Date(isoString)
+  if (!isoString) return ''
+  
+  // If it's a date-only string like "YYYY-MM-DD", parse it as local midnight
+  const isDateOnly = isoString.length === 10 && !isoString.includes('T')
+  const date = isDateOnly ? new Date(isoString + 'T00:00:00') : new Date(isoString)
+  
   const today = new Date()
   const yesterday = new Date()
   yesterday.setDate(today.getDate() - 1)
 
   if (date.toDateString() === today.toDateString()) {
+    if (isDateOnly) return 'Today'
     return `Today ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
   }
 
@@ -12,7 +18,7 @@ export function relativeDate(isoString) {
     return 'Yesterday'
   }
 
-  return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
+  return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
 export function formatQty(value) {
