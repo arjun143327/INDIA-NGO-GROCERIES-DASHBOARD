@@ -107,10 +107,11 @@ export function useActivityFeed(limit = 10, schoolId = null) {
 
     const mappedPriceData = priceData.map((entry) => {
       const entryTime = new Date(entry.created_at).getTime()
-      const isFromStockUpdate = stockData.some(s => 
-        s.item_id === entry.item_id &&
-        Math.abs(new Date(s.created_at).getTime() - entryTime) < 5000
-      )
+      const isFromStockUpdate = stockData.some(s => {
+        const sTime = new Date(s.created_at).getTime()
+        // Check if same item and time difference is within 60 seconds (60000ms)
+        return s.item_id === entry.item_id && Math.abs(sTime - entryTime) < 60000
+      })
       return mapPriceUpdateEntry(entry, isFromStockUpdate)
     })
 
