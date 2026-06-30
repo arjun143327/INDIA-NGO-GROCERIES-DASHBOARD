@@ -25,7 +25,7 @@ export default function ActivityRow({ entry }) {
   } else if (isPriceUpdate) {
     iconColor = 'bg-blue-500'
     textColor = 'text-blue-600'
-    label = 'Price Update'
+    label = entry.update_reason === 'stock_update' ? 'Stock Update' : 'Price Update'
     valueDisplay = `₹${entry.old_price || 0} → ₹${entry.new_price}`
   }
 

@@ -32,10 +32,11 @@ function mapUsageEntry(entry) {
   }
 }
 
-function mapPriceUpdateEntry(entry) {
+function mapPriceUpdateEntry(entry, isFromStockUpdate = false) {
   return {
     id: entry.id,
     type: 'price_update',
+    update_reason: isFromStockUpdate ? 'stock_update' : 'manual_update',
     old_price: entry.old_price,
     new_price: entry.new_price,
     created_at: entry.created_at,
@@ -62,7 +63,7 @@ export function useActivityFeed(limit = 10, schoolId = null) {
 
     const stockQuery = supabase
       .from('stock_entries')
-      .select('id, created_at, entry_date, notes, total_expense, qty_added, inventory_items(name_en, unit, category)')
+      .select('id, item_id, created_at, entry_date, notes, total_expense, qty_added, inventory_items(name_en, unit, category)')
       .order('created_at', { ascending: false })
       .limit(limit)
 
@@ -74,7 +75,7 @@ export function useActivityFeed(limit = 10, schoolId = null) {
 
     const priceQuery = supabase
       .from('price_updates')
-      .select('id, created_at, old_price, new_price, inventory_items(name_en, category)')
+      .select('id, item_id, created_at, old_price, new_price, inventory_items(name_en, category)')
       .order('created_at', { ascending: false })
       .limit(limit)
 
@@ -101,10 +102,22 @@ export function useActivityFeed(limit = 10, schoolId = null) {
       return
     }
 
+    const stockData = stockResponse.data ?? []
+    const priceData = priceResponse.data ?? []
+
+    const mappedPriceData = priceData.map((entry) => {
+      const entryTime = new Date(entry.created_at).getTime()
+      const isFromStockUpdate = stockData.some(s => 
+        s.item_id === entry.item_id &&
+        Math.abs(new Date(s.created_at).getTime() - entryTime) < 5000
+      )
+      return mapPriceUpdateEntry(entry, isFromStockUpdate)
+    })
+
     const merged = [
-      ...(stockResponse.data ?? []).map(mapStockEntry), 
+      ...stockData.map(mapStockEntry), 
       ...(usageResponse.data ?? []).map(mapUsageEntry),
-      ...(priceResponse.data ?? []).map(mapPriceUpdateEntry)
+      ...mappedPriceData
     ]
       .sort((left, right) => new Date(right.created_at) - new Date(left.created_at))
       .slice(0, limit)
