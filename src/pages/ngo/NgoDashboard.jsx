@@ -388,7 +388,7 @@ export default function NgoDashboard() {
                 {filteredEntries.filter(e => e.type !== 'price_update').length === 0 ? (
                   <p className="p-4 text-center text-[13px] text-app-textSecondary mt-8 opacity-70">No activity recorded in this period.</p>
                 ) : (
-                  filteredEntries.filter(e => e.type !== 'price_update').slice(0, 10).map((entry, idx) => (
+                  filteredEntries.filter(e => e.type !== 'price_update').map((entry, idx) => (
                     <ActivityRow key={`${entry.type}-${entry.id}-${idx}`} entry={entry} />
                   ))
                 )}
@@ -405,7 +405,7 @@ export default function NgoDashboard() {
                 {entries.filter(e => e.type === 'price_update').length === 0 ? (
                   <p className="p-4 text-center text-[13px] text-app-textSecondary mt-8 opacity-70">No price updates recorded.</p>
                 ) : (
-                  entries.filter(e => e.type === 'price_update').slice(0, 10).map((entry, idx) => (
+                  entries.filter(e => e.type === 'price_update').map((entry, idx) => (
                     <ActivityRow key={`${entry.type}-${entry.id}-${idx}`} entry={entry} />
                   ))
                 )}
