@@ -380,7 +380,7 @@ export default function NgoDashboard() {
             </div>
 
             {/* Recent Activity Section */}
-            <div className="rounded-[10px] border border-app-border bg-app-surface shadow-sm shadow-black/5 flex flex-col overflow-hidden h-[340px]">
+            <div className="rounded-[10px] border border-app-border bg-app-surface shadow-sm shadow-black/5 flex flex-col overflow-hidden max-h-[600px] min-h-[400px]">
               <div className="border-b border-app-border px-5 py-4 bg-app-surfaceAlt/50">
                 <h2 className="text-[14px] font-semibold text-app-textPrimary">Recent Activity Log</h2>
               </div>
@@ -396,7 +396,7 @@ export default function NgoDashboard() {
             </div>
 
             {/* Price Updates Section */}
-            <div className="rounded-[10px] border border-app-border bg-app-surface shadow-sm shadow-black/5 flex flex-col overflow-hidden h-[340px]">
+            <div className="rounded-[10px] border border-app-border bg-app-surface shadow-sm shadow-black/5 flex flex-col overflow-hidden max-h-[600px] min-h-[400px]">
               <div className="border-b border-app-border px-5 py-4 flex items-center gap-2 bg-app-surfaceAlt/50">
                 <AlertCircle size={16} className="text-blue-500" />
                 <h2 className="text-[14px] font-semibold text-app-textPrimary">Price Audits</h2>
