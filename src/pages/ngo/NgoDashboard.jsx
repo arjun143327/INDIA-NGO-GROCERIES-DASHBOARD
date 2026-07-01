@@ -12,11 +12,13 @@ import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Cart
 import { useCurrentStock } from '../../hooks/useCurrentStock'
 import { useAlerts } from '../../hooks/useAlerts'
 import { useActivityFeed } from '../../hooks/useActivityFeed'
+import { useMonthlyBudget } from '../../hooks/useMonthlyBudget'
+import { useMonthlyExpenditure } from '../../hooks/useMonthlyExpenditure'
 import { AlertCircle, Calendar, Pencil, Check, X, Download } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { downloadMultiSheetExcel } from '../../utils/exportExcel'
 
-const TABS = ['Overview', 'Master Catalog', 'Usage Trends', 'Expenditure']
+const TABS = ['Overview', 'Master Catalog', 'Usage Trends', 'Expenditure', 'Budget Tracker']
 
 export default function NgoDashboard() {
   const [activeTab, setActiveTab] = useState('Overview')
@@ -55,6 +57,26 @@ export default function NgoDashboard() {
   const { stock, refetch } = useCurrentStock(selectedSchoolId)
   const { entries } = useActivityFeed(100, selectedSchoolId) // Fetch more to allow meaningful date filtering
   const { critical, low, hasAlerts } = useAlerts(stock)
+
+  const { budgetData, loading: budgetLoading, updateBudgetSettings, currentMonthYear, refetchBudget } = useMonthlyBudget(selectedSchoolId)
+  const { usageLogs, loading: logsLoading } = useMonthlyExpenditure(selectedSchoolId, currentMonthYear)
+  
+  const [editingBudget, setEditingBudget] = useState(false)
+  const [editStudentCount, setEditStudentCount] = useState('')
+  const [editBudgetPerStudent, setEditBudgetPerStudent] = useState('')
+
+  const handleUpdateBudget = async (e) => {
+    e.preventDefault()
+    if (!budgetData) return
+    await updateBudgetSettings(budgetData.id, Number(editStudentCount), Number(editBudgetPerStudent))
+    setEditingBudget(false)
+  }
+
+  const handleApproveBudget = async () => {
+    if (!budgetData) return
+    await supabase.from('monthly_budgets').update({ status: 'approved' }).eq('id', budgetData.id)
+    if (refetchBudget) refetchBudget()
+  }
 
   // --- DATA AGGREGATION & FILTERING ---
 
@@ -187,6 +209,43 @@ export default function NgoDashboard() {
       { name: 'Critical', value: critical.length, fill: '#dc2626' }
     ].filter(d => d.value > 0)
   }, [stock, critical, low])
+
+  // 5. Budget Tracker Table Data
+  const budgetTrackerData = useMemo(() => {
+    if (!budgetData) return []
+    const totalBudget = budgetData.total_budget || 0
+    const [year, month] = currentMonthYear.split('-')
+    const daysInMonth = new Date(year, month, 0).getDate()
+    const limitPerDay = totalBudget / daysInMonth
+    
+    // Group usageLogs by day
+    const consumptionByDay = {}
+    usageLogs.forEach(log => {
+      const day = new Date(log.used_on).getDate()
+      if (!consumptionByDay[day]) consumptionByDay[day] = 0
+      consumptionByDay[day] += Number(log.usage_cost) || 0
+    })
+
+    const rows = []
+    let totalConsumption = 0
+    
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dailyConsumption = consumptionByDay[day] || 0
+      totalConsumption += dailyConsumption
+      const accumulatingLimit = limitPerDay * day
+      const difference = accumulatingLimit - totalConsumption
+      
+      rows.push({
+        day,
+        date: `${String(day).padStart(2, '0')}.${month}.${year}`,
+        limit: accumulatingLimit,
+        dailyConsumption,
+        totalConsumption,
+        difference
+      })
+    }
+    return rows
+  }, [budgetData, usageLogs, currentMonthYear])
 
   // --- HANDLERS ---
   const handleDownloadReport = () => {
@@ -727,6 +786,100 @@ export default function NgoDashboard() {
               )}
             </div>
           )}
+        </div>
+      )}
+
+      {/* --- BUDGET TRACKER TAB --- */}
+      {activeTab === 'Budget Tracker' && (
+        <div className="space-y-4 animate-in fade-in duration-300">
+          <div className="bg-white rounded-[12px] border border-app-border p-5 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
+              <div>
+                <h2 className="text-[15px] font-semibold text-app-textPrimary">Monthly Budget Tracker</h2>
+                <p className="text-[12px] text-app-textSecondary mt-0.5">Track daily cumulative spending against the monthly budget allowance.</p>
+              </div>
+              
+              <div className="flex items-center gap-3">
+                {editingBudget ? (
+                  <form onSubmit={handleUpdateBudget} className="flex items-center gap-2 bg-gray-50 p-2 rounded-lg border border-gray-200">
+                    <div>
+                      <label className="block text-[10px] text-gray-500 uppercase tracking-wide">Students</label>
+                      <input type="number" min="1" required className="w-20 px-2 py-1 text-sm border rounded" value={editStudentCount} onChange={e => setEditStudentCount(e.target.value)} />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] text-gray-500 uppercase tracking-wide">Budget/Std</label>
+                      <input type="number" min="1" required className="w-20 px-2 py-1 text-sm border rounded" value={editBudgetPerStudent} onChange={e => setEditBudgetPerStudent(e.target.value)} />
+                    </div>
+                    <div className="flex gap-1 mt-4">
+                      <button type="submit" className="bg-app-greenMid text-white px-2 py-1 rounded text-xs hover:bg-app-greenDark">Save</button>
+                      <button type="button" onClick={() => setEditingBudget(false)} className="bg-gray-200 text-gray-700 px-2 py-1 rounded text-xs hover:bg-gray-300">Cancel</button>
+                    </div>
+                  </form>
+                ) : (
+                  <div className="flex items-center gap-4">
+                    <div className="text-right">
+                      <div className="text-[10px] text-app-textSecondary uppercase tracking-wide font-semibold">
+                        Total Budget {budgetData?.status === 'pending' && <span className="text-amber-500 ml-1">(Pending Approval)</span>}
+                      </div>
+                      <div className="text-[14px] font-bold text-app-textPrimary">
+                        ₹{(budgetData?.total_budget || 0).toLocaleString('en-IN')} 
+                        <span className="text-[11px] font-normal text-app-textSecondary ml-1">
+                          ({budgetData?.student_count || 0} x {budgetData?.budget_per_student || 2050})
+                        </span>
+                      </div>
+                    </div>
+                    {budgetData?.status === 'pending' && (
+                      <button onClick={handleApproveBudget} className="bg-app-greenMid text-white px-3 py-1.5 rounded-md text-xs font-medium hover:bg-app-greenDark">
+                        Approve
+                      </button>
+                    )}
+                    <button onClick={() => {
+                      setEditStudentCount(budgetData?.student_count || '')
+                      setEditBudgetPerStudent(budgetData?.budget_per_student || 2050)
+                      setEditingBudget(true)
+                    }} className="p-2 bg-app-surfaceAlt hover:bg-gray-100 rounded border border-app-border text-app-textSecondary">
+                      <Pencil size={14} />
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="overflow-x-auto rounded-[8px] border border-app-border">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-app-surfaceAlt text-[11px] uppercase tracking-[0.5px] text-app-textSecondary border-b border-app-border">
+                    <th className="px-4 py-3 font-semibold border-r border-app-border">Date</th>
+                    <th className="px-4 py-3 font-semibold border-r border-app-border text-right">Limit</th>
+                    <th className="px-4 py-3 font-semibold border-r border-app-border text-right">Consumption of the Day</th>
+                    <th className="px-4 py-3 font-semibold border-r border-app-border text-right">Total Consumption</th>
+                    <th className="px-4 py-3 font-semibold text-right">Difference</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {budgetTrackerData.length === 0 ? (
+                    <tr>
+                      <td colSpan="5" className="px-4 py-8 text-center text-[13px] text-app-textSecondary">
+                        No budget or consumption data available for this month.
+                      </td>
+                    </tr>
+                  ) : (
+                    budgetTrackerData.map((row) => (
+                      <tr key={row.day} className="border-b border-app-border/50 hover:bg-gray-50/50">
+                        <td className="px-4 py-2 border-r border-app-border text-[12px]">{row.date}</td>
+                        <td className="px-4 py-2 border-r border-app-border text-right text-[12px] font-medium text-app-textSecondary">{row.limit.toFixed(2)}</td>
+                        <td className="px-4 py-2 border-r border-app-border text-right text-[12px]">{row.dailyConsumption.toFixed(2)}</td>
+                        <td className="px-4 py-2 border-r border-app-border text-right text-[12px] font-medium">{row.totalConsumption.toFixed(2)}</td>
+                        <td className={`px-4 py-2 text-right text-[12px] font-semibold ${row.difference < 0 ? 'text-app-red' : 'text-app-greenMid'}`}>
+                          {row.difference.toFixed(2)}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       )}
     </div>

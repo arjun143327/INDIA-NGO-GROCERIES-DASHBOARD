@@ -51,11 +51,16 @@ export default function UsageEntryForm({ open, onClose, onSuccess }) {
       const selectedStockItem = stock.find(s => s.item_id === item.item_id)
       const { factor } = getUsageConversion(selectedStockItem?.item_name, selectedStockItem?.unit)
       
+      const qtyBaseUnit = Number(item.quantity) / factor
+      const unitPrice = Number(selectedStockItem?.unit_price) || 0
+      const calcCost = Number((qtyBaseUnit * unitPrice).toFixed(2))
+
       return {
         school_id: profile?.school_id,
         item_id: item.item_id,
         // Convert the entered usage quantity back to the base inventory unit before saving
-        qty_used: Number(item.quantity) / factor,
+        qty_used: qtyBaseUnit,
+        usage_cost: calcCost,
         used_on: date,
         meal_type: mealType,
         notes,

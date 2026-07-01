@@ -23,6 +23,7 @@ function mapUsageEntry(entry) {
     id: entry.id,
     type: 'usage',
     qty: entry.qty_used,
+    usage_cost: entry.usage_cost,
     created_at: entry.created_at,
     date: entry.used_on,
     notes: entry.notes,
@@ -69,7 +70,7 @@ export function useActivityFeed(limit = 10, schoolId = null) {
 
     const usageQuery = supabase
       .from('usage_logs')
-      .select('id, created_at, used_on, notes, qty_used, meal_type, inventory_items(name_en, unit)')
+      .select('id, created_at, used_on, notes, qty_used, usage_cost, meal_type, inventory_items(name_en, unit)')
       .order('created_at', { ascending: false })
       .limit(limit)
 

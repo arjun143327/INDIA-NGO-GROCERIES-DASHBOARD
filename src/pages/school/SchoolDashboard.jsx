@@ -8,6 +8,7 @@ import ActivityRow from '../../components/ui/ActivityRow'
 import { useCurrentStock } from '../../hooks/useCurrentStock'
 import { useAlerts } from '../../hooks/useAlerts'
 import { useActivityFeed } from '../../hooks/useActivityFeed'
+import { useMonthlyBudget } from '../../hooks/useMonthlyBudget'
 
 import { stockStatus } from '../../utils/stockStatus'
 import StockEntryForm from '../../components/forms/StockEntryForm'
@@ -35,6 +36,18 @@ export default function SchoolDashboard() {
   const { stock, loading: stockLoading, refetch: refetchStock } = useCurrentStock()
   const { entries, loading: feedLoading, refetch: refetchFeed } = useActivityFeed(100)
   const { critical, low, hasAlerts } = useAlerts(stock)
+  
+  const { budgetData, loading: budgetLoading, setStudentCount, currentMonthYear } = useMonthlyBudget(profile?.school_id)
+  const [strengthInput, setStrengthInput] = useState('')
+  const [isSubmittingStrength, setIsSubmittingStrength] = useState(false)
+
+  const handleStrengthSubmit = async (e) => {
+    e.preventDefault()
+    if (!strengthInput || isNaN(strengthInput) || Number(strengthInput) <= 0) return
+    setIsSubmittingStrength(true)
+    await setStudentCount(Number(strengthInput))
+    setIsSubmittingStrength(false)
+  }
 
   const handleUpdate = useCallback(() => {
     refetchStock()
@@ -146,6 +159,42 @@ export default function SchoolDashboard() {
 
   return (
     <div className="space-y-4">
+      {/* Monthly Setup Banner */}
+      {!budgetLoading && profile?.role === 'school_staff' && (
+        <div className="bg-white rounded-[12px] border border-app-border p-4 shadow-sm mb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h3 className="text-sm font-semibold text-app-textPrimary">Month Setup: {new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' })}</h3>
+              <p className="text-xs text-app-textSecondary mt-1">
+                {budgetData 
+                  ? `Total Student Strength: ${budgetData.student_count} (Locked by Admin)`
+                  : 'Please enter the total student strength for this month to setup the budget tracking.'}
+              </p>
+            </div>
+            {!budgetData && (
+              <form onSubmit={handleStrengthSubmit} className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min="1"
+                  required
+                  placeholder="Total Students"
+                  className="w-32 rounded-md border border-app-border px-3 py-1.5 text-sm"
+                  value={strengthInput}
+                  onChange={e => setStrengthInput(e.target.value)}
+                />
+                <button
+                  type="submit"
+                  disabled={isSubmittingStrength}
+                  className="rounded-md bg-app-blue text-white px-4 py-1.5 text-sm font-medium hover:bg-app-blue/90 disabled:opacity-50"
+                >
+                  {isSubmittingStrength ? 'Saving...' : 'Save'}
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Header and Actions */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>

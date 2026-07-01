@@ -51,21 +51,24 @@ export default function StockEntryForm({ open, onClose, onSuccess }) {
         const { error: insertError } = await supabase.from('stock_entries').insert(entry)
         if (insertError) throw insertError
 
-        // Automatically add the expense to the existing accumulated cost in the inventory table
+        // Automatically save the price info to the inventory table
         if (expense > 0) {
           const selectedStockItem = stock.find(s => s.item_id === item.item_id)
           const previousCost = Number(selectedStockItem?.estimated_cost) || 0
           const exactPrice = Math.round(expense)
-          const newTotalCost = previousCost + exactPrice
+          const calcUnitPrice = Number((expense / qty).toFixed(2))
 
-          await supabase.from('inventory_items').update({ estimated_cost: newTotalCost }).eq('id', item.item_id)
+          await supabase.from('inventory_items').update({ 
+            estimated_cost: exactPrice, 
+            unit_price: calcUnitPrice 
+          }).eq('id', item.item_id)
           
           // Also log it in price_updates for history
           await supabase.from('price_updates').insert({
             school_id: profile?.school_id,
             item_id: item.item_id,
             old_price: previousCost,
-            new_price: newTotalCost,
+            new_price: exactPrice,
             updated_by: profile?.id
           })
         }
