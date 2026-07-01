@@ -20,7 +20,18 @@ CREATE TABLE IF NOT EXISTS public.monthly_budgets (
 
 -- 3. Update current_stock_view to include unit_price
 DROP VIEW IF EXISTS public.current_stock_view;
-CREATE OR REPLACE VIEW public.current_stock_view AS
+CREATE OR REPLACE VIEW public.current_stock_view
+WITH (security_invoker = true) AS
+WITH stock_totals AS (
+  SELECT item_id, sum(qty_added) AS total_added
+  FROM public.stock_entries
+  GROUP BY item_id
+),
+usage_totals AS (
+  SELECT item_id, sum(qty_used) AS total_used
+  FROM public.usage_logs
+  GROUP BY item_id
+)
 SELECT 
     i.school_id,
     i.id AS item_id,
@@ -38,8 +49,8 @@ SELECT
     i.unit_price,
     COALESCE(st.total_added, 0) - COALESCE(ut.total_used, 0) AS current_stock
 FROM public.inventory_items i
-LEFT JOIN public.stock_totals st ON st.item_id = i.id
-LEFT JOIN public.usage_totals ut ON ut.item_id = i.id
+LEFT JOIN stock_totals st ON st.item_id = i.id
+LEFT JOIN usage_totals ut ON ut.item_id = i.id
 WHERE i.is_active = true;
 
 GRANT SELECT ON public.current_stock_view TO authenticated;
