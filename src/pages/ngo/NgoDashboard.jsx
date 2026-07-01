@@ -229,7 +229,11 @@ export default function NgoDashboard() {
     const rows = []
     let totalConsumption = 0
     
-    for (let day = 1; day <= daysInMonth; day++) {
+    const now = new Date()
+    const isCurrentMonth = now.getFullYear() === Number(year) && (now.getMonth() + 1) === Number(month)
+    const maxDayToShow = isCurrentMonth ? now.getDate() : daysInMonth
+    
+    for (let day = 1; day <= maxDayToShow; day++) {
       const dailyConsumption = consumptionByDay[day] || 0
       totalConsumption += dailyConsumption
       const accumulatingLimit = limitPerDay * day
