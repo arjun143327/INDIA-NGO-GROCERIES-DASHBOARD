@@ -37,6 +37,10 @@ export default function StockEntryForm({ open, onClose, onSuccess }) {
       for (const item of validItems) {
         const qty = Number(item.quantity)
         const expense = Number(item.expense) || 0
+
+        if (qty <= 0) {
+          throw new Error('Quantity must be greater than zero')
+        }
         
         // Standard incoming stock with expense
         const entry = {
@@ -58,19 +62,23 @@ export default function StockEntryForm({ open, onClose, onSuccess }) {
           const exactPrice = Math.round(expense)
           const calcUnitPrice = Number((expense / qty).toFixed(2))
 
-          await supabase.from('inventory_items').update({ 
+          const { error: updateError } = await supabase.from('inventory_items').update({ 
             estimated_cost: exactPrice, 
             unit_price: calcUnitPrice 
           }).eq('id', item.item_id)
           
+          if (updateError) throw updateError
+
           // Also log it in price_updates for history
-          await supabase.from('price_updates').insert({
+          const { error: logError } = await supabase.from('price_updates').insert({
             school_id: profile?.school_id,
             item_id: item.item_id,
             old_price: previousCost,
             new_price: exactPrice,
             updated_by: profile?.id
           })
+
+          if (logError) throw logError
         }
       }
 
