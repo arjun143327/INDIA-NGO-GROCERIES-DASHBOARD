@@ -65,6 +65,7 @@ export default function NgoDashboard() {
   const [editStudentCount, setEditStudentCount] = useState('')
   const [editBudgetPerStudent, setEditBudgetPerStudent] = useState('')
   const [breakdownDate, setBreakdownDate] = useState(null)
+  const [itemToArchive, setItemToArchive] = useState(null)
 
   const handleUpdateBudget = async (e) => {
     e.preventDefault()
@@ -79,14 +80,19 @@ export default function NgoDashboard() {
     if (refetchBudget) refetchBudget()
   }
 
-  const handleArchiveItem = async (itemId, itemName) => {
-    if (!window.confirm(`Are you sure you want to remove "${itemName}"? It will no longer appear in the active inventory.`)) return
-    const { error } = await supabase.from('inventory_items').update({ is_active: false }).eq('id', itemId)
+  const triggerArchiveItem = (itemId, itemName) => {
+    setItemToArchive({ id: itemId, name: itemName })
+  }
+
+  const confirmArchiveItem = async () => {
+    if (!itemToArchive) return
+    const { error } = await supabase.from('inventory_items').update({ is_active: false }).eq('id', itemToArchive.id)
     if (!error && refetch) {
       refetch()
     } else if (error) {
       alert("Failed to remove item. Please try again.")
     }
+    setItemToArchive(null)
   }
 
   // --- DATA AGGREGATION & FILTERING ---
@@ -609,7 +615,7 @@ export default function NgoDashboard() {
                             <div className="flex items-center justify-between">
                               <StatusPill status={status} />
                               <button
-                                onClick={() => handleArchiveItem(item.item_id, item.name_en)}
+                                onClick={() => triggerArchiveItem(item.item_id, item.name_en)}
                                 className="p-1.5 text-app-textSecondary hover:text-app-red hover:bg-app-redBg rounded transition-colors opacity-0 group-hover:opacity-100"
                                 title="Remove Item"
                               >
@@ -975,6 +981,43 @@ export default function NgoDashboard() {
                   </table>
                 )
               })()}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Archive Confirmation Modal */}
+      {itemToArchive && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-lg w-full max-w-sm overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="px-5 py-4 flex items-center justify-between border-b border-app-border bg-app-surfaceAlt">
+              <h3 className="font-semibold text-app-textPrimary text-[15px]">Confirm Removal</h3>
+              <button onClick={() => setItemToArchive(null)} className="text-app-textSecondary hover:text-app-textPrimary rounded-full p-1 bg-white border border-app-border"><X size={16} /></button>
+            </div>
+            <div className="p-5 text-center">
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-app-redBg mb-4">
+                <Trash2 size={24} className="text-app-red" />
+              </div>
+              <p className="text-[15px] font-medium text-app-textPrimary">
+                Remove <span className="font-bold">"{itemToArchive.name}"</span>?
+              </p>
+              <p className="text-[13px] text-app-textSecondary mt-2">
+                This item will be deactivated and no longer appear in the active inventory lists. Historical logs will remain intact.
+              </p>
+            </div>
+            <div className="px-5 py-4 bg-gray-50 border-t border-app-border flex items-center justify-center gap-3">
+              <button 
+                onClick={() => setItemToArchive(null)}
+                className="px-6 py-2 text-[13px] font-medium text-app-textSecondary hover:text-app-textPrimary bg-white border border-app-border rounded-lg shadow-sm hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={confirmArchiveItem}
+                className="px-6 py-2 text-[13px] font-medium bg-app-red text-white rounded-lg hover:bg-red-700 transition-colors shadow-sm"
+              >
+                Yes, Remove It
+              </button>
             </div>
           </div>
         </div>
