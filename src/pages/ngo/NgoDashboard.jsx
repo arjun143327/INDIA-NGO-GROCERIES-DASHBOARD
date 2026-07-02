@@ -270,8 +270,9 @@ export default function NgoDashboard() {
 
   // --- HANDLERS ---
   const handleDownloadReport = () => {
-    // 1. Prepare Inventory Sheet
-    const inventoryData = stock.map(item => {
+    // 1. Prepare Active Inventory Sheet
+    const activeStock = stock.filter(item => item.is_active !== false)
+    const inventoryData = activeStock.map(item => {
       const status = stockStatus(item.current_stock, item.threshold_qty)
       let displayStatus = 'HEALTHY (OK)'
       if (status === 'critical') displayStatus = 'CRITICAL'
@@ -288,7 +289,56 @@ export default function NgoDashboard() {
       }
     })
 
-    // 2. Prepare Expenditure/Spending Log Sheet
+    // 2. Prepare Daily Budget Summary Sheet
+    const dailyBudgetSummary = budgetTrackerTableData.map(row => ({
+      'Date': row.date,
+      'Allowed Limit (₹)': Number(row.limit),
+      'Actual Consumption (₹)': Number(row.dailyConsumption),
+      'Running Total (₹)': Number(row.totalConsumption),
+      'Variance (₹)': Number(row.difference)
+    }))
+    
+    if (budgetTrackerTableData.length > 0) {
+      const lastRow = budgetTrackerTableData[budgetTrackerTableData.length - 1]
+      dailyBudgetSummary.push({
+        'Date': 'TOTAL',
+        'Allowed Limit (₹)': Number(lastRow.limit),
+        'Actual Consumption (₹)': Number(lastRow.totalConsumption),
+        'Running Total (₹)': '',
+        'Variance (₹)': Number(lastRow.difference)
+      })
+    }
+
+    // 3. Prepare Itemized Daily Consumption Sheet
+    const itemizedConsumption = []
+    let totalItemizedCost = 0
+    
+    const sortedLogs = [...usageLogs].sort((a, b) => new Date(a.used_on) - new Date(b.used_on))
+    sortedLogs.forEach(log => {
+      const date = new Date(log.used_on)
+      const itemName = log.inventory_items ? `${log.inventory_items.name_en} ${log.inventory_items.name_ta ? `(${log.inventory_items.name_ta})` : ''}` : 'Unknown Item'
+      
+      itemizedConsumption.push({
+        'Date': date.toLocaleDateString('en-IN'),
+        'Item Name': itemName,
+        'Qty Used': Number(log.qty_used),
+        'Unit': log.inventory_items?.unit || '',
+        'Cost (₹)': Number(log.usage_cost)
+      })
+      totalItemizedCost += Number(log.usage_cost)
+    })
+    
+    if (itemizedConsumption.length > 0) {
+      itemizedConsumption.push({
+        'Date': 'TOTAL',
+        'Item Name': '',
+        'Qty Used': '',
+        'Unit': '',
+        'Cost (₹)': totalItemizedCost
+      })
+    }
+
+    // 4. Prepare Expenditure/Spending Log Sheet
     const stockEntries = filteredEntries.filter(e => e.type === 'stock')
     const expenditureLog = stockEntries.map(e => {
       const date = new Date(e.date || e.created_at)
@@ -302,26 +352,25 @@ export default function NgoDashboard() {
         'Notes': e.notes || ''
       }
     })
-
-    // 3. Prepare Price Audit History Sheet
-    const priceUpdates = filteredEntries.filter(e => e.type === 'price_update')
-    const priceLog = priceUpdates.map(e => {
-      const date = new Date(e.date || e.created_at)
-      const diff = Number(e.new_price || 0) - Number(e.old_price || 0)
-      return {
-        'Date': date.toLocaleDateString('en-IN'),
-        'Time': date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        'Item Name': e.item_name,
-        'Old Price (₹)': Number(e.old_price || 0),
-        'New Price (₹)': Number(e.new_price || 0),
-        'Price Change (₹)': diff >= 0 ? `+₹${diff}` : `-₹${Math.abs(diff)}`
-      }
-    })
+    
+    if (expenditureLog.length > 0) {
+      const totalSpend = expenditureLog.reduce((sum, row) => sum + (Number(row['Total Spend (₹)']) || 0), 0)
+      expenditureLog.push({
+        'Date': 'TOTAL',
+        'Item Name': '',
+        'Category': '',
+        'Quantity Added': '',
+        'Unit': '',
+        'Total Spend (₹)': totalSpend,
+        'Notes': ''
+      })
+    }
 
     const sheets = [
-      { data: inventoryData, sheetName: 'Inventory Status' },
-      { data: expenditureLog, sheetName: 'Spending Log' },
-      { data: priceLog, sheetName: 'Price Audit History' }
+      { data: dailyBudgetSummary, sheetName: 'Daily Budget Summary' },
+      { data: itemizedConsumption, sheetName: 'Itemized Consumption' },
+      { data: inventoryData, sheetName: 'Active Inventory' },
+      { data: expenditureLog, sheetName: 'Spending Log' }
     ]
 
     downloadMultiSheetExcel(sheets, 'NGO_Monitoring_Report', {

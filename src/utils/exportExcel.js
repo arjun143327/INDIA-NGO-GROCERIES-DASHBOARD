@@ -36,18 +36,34 @@ function applyStylesToWorksheet(worksheet, hasMetadata) {
         }
       } else if (R > headerRowIndex) {
         // Data cells styling
+        let bgColor = (R - headerRowIndex) % 2 === 0 ? "F9FAFB" : "FFFFFF"
+        let fontColor = "111827"
+        let isBold = false
+
+        // Check if this row is a TOTAL row
+        const firstCellRef = XLSX.utils.encode_cell({c: 0, r: R})
+        const firstCell = worksheet[firstCellRef]
+        const isTotalRow = firstCell && firstCell.v && String(firstCell.v).toUpperCase().includes('TOTAL')
+
+        if (isTotalRow) {
+          bgColor = "E5E7EB"
+          isBold = true
+        }
+
         const val = String(cell.v).toUpperCase()
         if (val === 'CRITICAL') {
-          cell.s = { fill: { fgColor: { rgb: "FEE2E2" } }, font: { color: { rgb: "DC2626" }, bold: true } }
+          bgColor = "FEE2E2"; fontColor = "DC2626"; isBold = true
         } else if (val === 'LOW' || val === 'LOW STOCK') {
-          cell.s = { fill: { fgColor: { rgb: "FEF3C7" } }, font: { color: { rgb: "D97706" }, bold: true } }
+          bgColor = "FEF3C7"; fontColor = "D97706"; isBold = true
         } else if (val === 'OK' || val === 'HEALTHY (OK)') {
-          cell.s = { fill: { fgColor: { rgb: "DCFCE7" } }, font: { color: { rgb: "16A34A" }, bold: true } }
+          bgColor = "DCFCE7"; fontColor = "16A34A"; isBold = true
         } else if (val === 'INCOMING STOCK') {
-          cell.s = { fill: { fgColor: { rgb: "DBEAFE" } }, font: { color: { rgb: "2563EB" }, bold: true } }
+          bgColor = "DBEAFE"; fontColor = "2563EB"; isBold = true
         } else if (val === 'DAILY USAGE') {
-          cell.s = { fill: { fgColor: { rgb: "F3F4F6" } }, font: { color: { rgb: "4B5563" }, bold: true } }
+          bgColor = "F3F4F6"; fontColor = "4B5563"; isBold = true
         }
+
+        cell.s = { fill: { fgColor: { rgb: bgColor } }, font: { color: { rgb: fontColor }, bold: isBold } }
       }
     }
   }
