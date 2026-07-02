@@ -110,8 +110,9 @@ export function useActivityFeed(limit = 10, schoolId = null) {
       const entryTime = new Date(entry.created_at).getTime()
       const isFromStockUpdate = stockData.some(s => {
         const sTime = new Date(s.created_at).getTime()
-        // Check if same item and time difference is within 60 seconds (60000ms)
-        return s.item_id === entry.item_id && Math.abs(sTime - entryTime) < 60000
+        // Check if same item and time difference is within 5 seconds (5000ms)
+        // Automated stock entry creates both rows back-to-back. Manual edits take longer.
+        return s.item_id === entry.item_id && Math.abs(sTime - entryTime) <= 5000
       })
       return mapPriceUpdateEntry(entry, isFromStockUpdate)
     })
