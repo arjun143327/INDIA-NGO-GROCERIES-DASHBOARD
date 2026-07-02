@@ -290,7 +290,7 @@ export default function NgoDashboard() {
     })
 
     // 2. Prepare Daily Budget Summary Sheet
-    const dailyBudgetSummary = budgetTrackerTableData.map(row => ({
+    const dailyBudgetSummary = budgetTrackerData.map(row => ({
       'Date': row.date,
       'Allowed Limit (₹)': Number(row.limit),
       'Actual Consumption (₹)': Number(row.dailyConsumption),
@@ -298,8 +298,8 @@ export default function NgoDashboard() {
       'Variance (₹)': Number(row.difference)
     }))
     
-    if (budgetTrackerTableData.length > 0) {
-      const lastRow = budgetTrackerTableData[budgetTrackerTableData.length - 1]
+    if (budgetTrackerData.length > 0) {
+      const lastRow = budgetTrackerData[budgetTrackerData.length - 1]
       dailyBudgetSummary.push({
         'Date': 'TOTAL',
         'Allowed Limit (₹)': Number(lastRow.limit),
