@@ -22,6 +22,16 @@ export default {
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
       },
+      fontSize: {
+        'xs': ['0.875rem', { lineHeight: '1.25rem' }],   // originally sm (14px)
+        'sm': ['1rem', { lineHeight: '1.5rem' }],        // originally base (16px)
+        'base': ['1.125rem', { lineHeight: '1.75rem' }], // originally lg (18px)
+        'lg': ['1.25rem', { lineHeight: '1.75rem' }],    // originally xl (20px)
+        'xl': ['1.5rem', { lineHeight: '2rem' }],        // originally 2xl (24px)
+        '2xl': ['1.875rem', { lineHeight: '2.25rem' }],  // originally 3xl (30px)
+        '3xl': ['2.25rem', { lineHeight: '2.5rem' }],    // originally 4xl (36px)
+        '4xl': ['3rem', { lineHeight: '1' }],            // originally 5xl (48px)
+      },
       boxShadow: {
         none: 'none',
       },
