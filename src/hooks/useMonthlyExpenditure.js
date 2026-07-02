@@ -22,7 +22,7 @@ export function useMonthlyExpenditure(schoolId, monthYear) {
 
     const { data, error } = await supabase
       .from('usage_logs')
-      .select('*')
+      .select('*, inventory_items(name_en, name_ta, unit)')
       .eq('school_id', schoolId)
       .gte('used_on', startOfMonth)
       .lte('used_on', endOfMonth)

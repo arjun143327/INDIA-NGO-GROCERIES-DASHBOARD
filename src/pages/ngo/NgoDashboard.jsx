@@ -64,6 +64,7 @@ export default function NgoDashboard() {
   const [editingBudget, setEditingBudget] = useState(false)
   const [editStudentCount, setEditStudentCount] = useState('')
   const [editBudgetPerStudent, setEditBudgetPerStudent] = useState('')
+  const [breakdownDate, setBreakdownDate] = useState(null)
 
   const handleUpdateBudget = async (e) => {
     e.preventDefault()
@@ -872,7 +873,18 @@ export default function NgoDashboard() {
                       <tr key={row.day} className="border-b border-app-border/50 hover:bg-gray-50/50">
                         <td className="px-4 py-2 border-r border-app-border text-[12px]">{row.date}</td>
                         <td className="px-4 py-2 border-r border-app-border text-right text-[12px] font-medium text-app-textSecondary">{row.limit.toFixed(2)}</td>
-                        <td className="px-4 py-2 border-r border-app-border text-right text-[12px]">{row.dailyConsumption.toFixed(2)}</td>
+                        <td className="px-4 py-2 border-r border-app-border text-right text-[12px]">
+                          {row.dailyConsumption > 0 ? (
+                            <button 
+                              onClick={() => setBreakdownDate(row.date)}
+                              className="text-blue-600 hover:text-blue-800 hover:underline font-medium focus:outline-none"
+                            >
+                              {row.dailyConsumption.toFixed(2)}
+                            </button>
+                          ) : (
+                            row.dailyConsumption.toFixed(2)
+                          )}
+                        </td>
                         <td className="px-4 py-2 border-r border-app-border text-right text-[12px] font-medium">{row.totalConsumption.toFixed(2)}</td>
                         <td className={`px-4 py-2 text-right text-[12px] font-semibold ${row.difference < 0 ? 'text-app-red' : 'text-app-greenMid'}`}>
                           {row.difference.toFixed(2)}
@@ -882,6 +894,68 @@ export default function NgoDashboard() {
                   )}
                 </tbody>
               </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Daily Consumption Breakdown Modal */}
+      {breakdownDate && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-lg w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="px-5 py-4 border-b border-app-border flex items-center justify-between bg-app-surfaceAlt">
+              <h3 className="font-semibold text-app-textPrimary text-[15px]">
+                Consumption Breakdown - {breakdownDate}
+              </h3>
+              <button
+                onClick={() => setBreakdownDate(null)}
+                className="text-app-textSecondary hover:text-app-textPrimary bg-white rounded-full p-1 border border-app-border"
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <div className="p-0 max-h-[60vh] overflow-y-auto">
+              {(() => {
+                const dayStr = breakdownDate.split('.')[0]
+                const logsForDay = usageLogs.filter(log => new Date(log.used_on).getDate() === Number(dayStr))
+                
+                if (logsForDay.length === 0) {
+                  return <div className="p-6 text-center text-[13px] text-app-textSecondary">No consumption recorded for this day.</div>
+                }
+
+                return (
+                  <table className="w-full text-left text-[13px]">
+                    <thead className="bg-gray-50 border-b border-app-border text-[11px] uppercase tracking-wider text-app-textSecondary">
+                      <tr>
+                        <th className="px-5 py-3 font-medium">Item Name</th>
+                        <th className="px-5 py-3 font-medium text-right">Qty Used</th>
+                        <th className="px-5 py-3 font-medium text-right">Cost</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-app-border/50">
+                      {logsForDay.map(log => {
+                        const itemName = log.inventory_items ? `${log.inventory_items.name_en} ${log.inventory_items.name_ta ? `(${log.inventory_items.name_ta})` : ''}` : 'Unknown Item'
+                        const unit = log.inventory_items?.unit || ''
+                        return (
+                          <tr key={log.id} className="hover:bg-gray-50/50">
+                            <td className="px-5 py-3 font-medium text-app-textPrimary">{itemName}</td>
+                            <td className="px-5 py-3 text-right text-app-textSecondary">{log.qty_used} {unit}</td>
+                            <td className="px-5 py-3 text-right font-medium text-app-textPrimary">₹{Number(log.usage_cost).toFixed(2)}</td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                    <tfoot className="bg-gray-50 border-t border-app-border">
+                      <tr>
+                        <td colSpan={2} className="px-5 py-3 text-right font-semibold text-app-textPrimary text-[12px] uppercase">Total</td>
+                        <td className="px-5 py-3 text-right font-bold text-app-greenMid text-[14px]">
+                          ₹{logsForDay.reduce((sum, log) => sum + Number(log.usage_cost), 0).toFixed(2)}
+                        </td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                )
+              })()}
             </div>
           </div>
         </div>
