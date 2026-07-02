@@ -29,8 +29,8 @@ export default {
         'lg': ['1.25rem', { lineHeight: '2.5rem' }],    // originally xl (20px)
         'xl': ['1.5rem', { lineHeight: '2.75rem' }],        // originally 2xl (24px)
         '2xl': ['1.875rem', { lineHeight: '3rem' }],  // originally 3xl (30px)
-        '3xl': ['2.25rem', { lineHeight: '3.25rem' }],    // originally 4xl (36px)
-        '4xl': ['3rem', { lineHeight: '3.5rem' }],            // originally 5xl (48px)
+        '3xl': ['2.25rem', { lineHeight: '3rem' }],    // originally 4xl (36px)
+        '4xl': ['3rem', { lineHeight: '3rem' }],            // originally 5xl (48px)
       },
       boxShadow: {
         none: 'none',

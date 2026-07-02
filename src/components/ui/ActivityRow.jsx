@@ -23,9 +23,15 @@ export default function ActivityRow({ entry }) {
     const { usageUnit, factor } = getUsageConversion(entry.item_name, entry.unit)
     valueDisplay = `-${formatQty(entry.qty * factor)} ${usageUnit}`
   } else if (isPriceUpdate) {
-    iconColor = 'bg-blue-500'
-    textColor = 'text-blue-600'
-    label = entry.update_reason === 'stock_update' ? 'Stock Update' : 'Price Update'
+    if (entry.update_reason === 'stock_update') {
+      iconColor = 'bg-blue-500'
+      textColor = 'text-blue-600'
+      label = 'Stock Update'
+    } else {
+      iconColor = 'bg-app-red'
+      textColor = 'text-app-red'
+      label = 'Price Update'
+    }
     valueDisplay = `₹${entry.old_price || 0} → ₹${entry.new_price}`
   }
 
