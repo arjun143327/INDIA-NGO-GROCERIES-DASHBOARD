@@ -406,7 +406,7 @@ export default function NgoDashboard() {
           {/* KPI Stat Cards */}
           <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
             <StatCard label="Total Tracked Items" value={stock.length} />
-            <StatCard label="Entries in Period" value={filteredEntries.filter(e => e.type === 'stock' || e.type === 'usage').length} />
+            <StatCard label="Today's Entries" value={entries.filter(e => (e.type === 'stock' || e.type === 'usage') && (e.date || e.created_at).startsWith(new Date().toISOString().split('T')[0])).length} />
             <StatCard label="Low Stock Items" value={low.length} colour="text-app-amber" />
             <StatCard label="Critical Items" value={critical.length} colour="text-app-red" />
             {expenditureData.totalSpend > 0 && (
