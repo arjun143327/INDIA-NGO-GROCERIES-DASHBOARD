@@ -14,7 +14,7 @@ import { useAlerts } from '../../hooks/useAlerts'
 import { useActivityFeed } from '../../hooks/useActivityFeed'
 import { useMonthlyBudget } from '../../hooks/useMonthlyBudget'
 import { useMonthlyExpenditure } from '../../hooks/useMonthlyExpenditure'
-import { AlertCircle, Calendar, Pencil, Check, X, Download } from 'lucide-react'
+import { AlertCircle, Calendar, Pencil, Check, X, Download, Trash2 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { downloadMultiSheetExcel } from '../../utils/exportExcel'
 
@@ -77,6 +77,16 @@ export default function NgoDashboard() {
     if (!budgetData) return
     await supabase.from('monthly_budgets').update({ status: 'approved' }).eq('id', budgetData.id)
     if (refetchBudget) refetchBudget()
+  }
+
+  const handleArchiveItem = async (itemId, itemName) => {
+    if (!window.confirm(`Are you sure you want to remove "${itemName}"? It will no longer appear in the active inventory.`)) return
+    const { error } = await supabase.from('inventory_items').update({ is_active: false }).eq('id', itemId)
+    if (!error && refetch) {
+      refetch()
+    } else if (error) {
+      alert("Failed to remove item. Please try again.")
+    }
   }
 
   // --- DATA AGGREGATION & FILTERING ---
@@ -537,7 +547,7 @@ export default function NgoDashboard() {
                       const rowBg = status === 'critical' ? 'bg-app-redBg/30' : status === 'low' ? 'bg-app-amberBg/30' : 'hover:bg-[#fafaf9] bg-white'
                       
                       return (
-                        <tr key={item.item_id} className={`border-b border-app-border last:border-0 transition-colors ${rowBg}`}>
+                        <tr key={item.item_id} className={`group border-b border-app-border last:border-0 transition-colors ${rowBg}`}>
                           <td className="px-5 py-3.5">
                             <div className="flex items-center gap-3">
                               <div className="flex flex-col">
@@ -596,7 +606,16 @@ export default function NgoDashboard() {
                             )}
                           </td>
                           <td className="px-5 py-3.5">
-                            <StatusPill status={status} />
+                            <div className="flex items-center justify-between">
+                              <StatusPill status={status} />
+                              <button
+                                onClick={() => handleArchiveItem(item.item_id, item.name_en)}
+                                className="p-1.5 text-app-textSecondary hover:text-app-red hover:bg-app-redBg rounded transition-colors opacity-0 group-hover:opacity-100"
+                                title="Remove Item"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       )
