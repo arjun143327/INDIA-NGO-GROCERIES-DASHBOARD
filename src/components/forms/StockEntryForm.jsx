@@ -59,11 +59,15 @@ export default function StockEntryForm({ open, onClose, onSuccess }) {
         if (expense > 0) {
           const selectedStockItem = stock.find(s => s.item_id === item.item_id)
           const previousCost = Number(selectedStockItem?.estimated_cost) || 0
-          const exactPrice = Math.round(expense)
-          const calcUnitPrice = Number((expense / qty).toFixed(2))
+          const exactExpense = Math.round(expense)
+          const newTotalCost = previousCost + exactExpense
+          
+          const currentStock = Number(selectedStockItem?.current_stock) || 0
+          const newStock = currentStock + qty
+          const calcUnitPrice = newStock > 0 ? Number((newTotalCost / newStock).toFixed(2)) : 0
 
           const { error: updateError } = await supabase.from('inventory_items').update({ 
-            estimated_cost: exactPrice, 
+            estimated_cost: newTotalCost, 
             unit_price: calcUnitPrice 
           }).eq('id', item.item_id)
           
@@ -74,7 +78,7 @@ export default function StockEntryForm({ open, onClose, onSuccess }) {
             school_id: profile?.school_id,
             item_id: item.item_id,
             old_price: previousCost,
-            new_price: exactPrice,
+            new_price: newTotalCost,
             updated_by: profile?.id
           })
 

@@ -85,10 +85,15 @@ export default function SchoolDashboard() {
     const newPrice = Number(editingPrice)
     const oldItem = stock.find(i => i.item_id === itemId)
     const oldPrice = oldItem?.estimated_cost || 0
+    const currentStock = Number(oldItem?.current_stock) || 1
+    const calcUnitPrice = Number((newPrice / currentStock).toFixed(2))
 
     if (newPrice !== oldPrice) {
       try {
-        const { error: updateError } = await supabase.from('inventory_items').update({ estimated_cost: newPrice }).eq('id', itemId)
+        const { error: updateError } = await supabase.from('inventory_items').update({ 
+          estimated_cost: newPrice,
+          unit_price: calcUnitPrice
+        }).eq('id', itemId)
         if (updateError) throw updateError
         
         const { error: insertError } = await supabase.from('price_updates').insert({

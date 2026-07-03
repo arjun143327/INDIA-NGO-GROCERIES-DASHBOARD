@@ -72,6 +72,18 @@ export default function UsageEntryForm({ open, onClose, onSuccess }) {
       const { error: insertError } = await supabase.from('usage_logs').insert(logs)
       if (insertError) throw insertError
 
+      // Also deduct from estimated_cost in inventory_items
+      for (const log of logs) {
+         const selectedStockItem = stock.find(s => s.item_id === log.item_id)
+         const previousCost = Number(selectedStockItem?.estimated_cost) || 0
+         let newTotalCost = previousCost - log.usage_cost
+         if (newTotalCost < 0) newTotalCost = 0
+
+         await supabase.from('inventory_items').update({
+           estimated_cost: Math.round(newTotalCost)
+         }).eq('id', log.item_id)
+      }
+
       setSubmitting(false)
       resetForm()
       onSuccess()
